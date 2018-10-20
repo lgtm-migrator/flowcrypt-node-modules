@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "",
   "main": "dist/index.js",
+  "private": true,
   "scripts": {
     "build": "./node_modules/typescript/bin/tsc"
   },

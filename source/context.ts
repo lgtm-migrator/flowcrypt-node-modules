@@ -1,5 +1,5 @@
 
-import {Config} from './config';
+import {BaseConfig} from './config';
 import {Db} from './db';
 import {Log} from './log';
 
@@ -7,9 +7,9 @@ export class Context {
 
   db: Db;
   log: Log;
-  config: Config;
+  config: BaseConfig;
 
-  constructor(config: Config, log: Log, db: Db) {
+  constructor(config: BaseConfig, log: Log, db: Db) {
     this.config = config;
     this.log = log;
     this.db = db;

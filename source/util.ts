@@ -46,7 +46,7 @@ export let chunks = <T> (array: T[], size: number): T[][] => {
   return results;
 };
 
-export let random = (length:number=5) => {
+export let lousy_random = (length:number=5) => {
   let id = '';
   let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
   for (let i = 0; i < length; i++) {

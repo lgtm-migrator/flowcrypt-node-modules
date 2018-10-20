@@ -12,8 +12,9 @@ export enum LOG_LEVELS {
 
 export type CommandLineOptions = {[name: string]: string};
 
-export class Config {
+export class BaseConfig {
 
+  APP_NAME = 'app';
   LOG_LEVEL = LOG_LEVELS.info;
   LOG_DIRECTORY = '';
   DB_HOST = '127.0.0.1';
@@ -32,7 +33,7 @@ export class Config {
 
   constructor(cmd_line_options: CommandLineOptions) {
     for(let name of Object.keys(process.env)) {
-      if(Config.KEYS_CONFIGURABLE.indexOf(name) !== -1) {
+      if(BaseConfig.KEYS_CONFIGURABLE.indexOf(name) !== -1) {
         this.set_option(name, process.env[name]!);
       }
     }
@@ -42,18 +43,18 @@ export class Config {
     // @ts-ignore
     let format_config_line = (k: string) => `Config ${k}=${this[k] as string}`;
     this.log = new Log(this);
-    this.log.debug(Config.KEYS_CONFIGURABLE.map(format_config_line).join('\n'));
+    this.log.debug(BaseConfig.KEYS_CONFIGURABLE.map(format_config_line).join('\n'));
   }
 
   static is_configurable = (option_name: string) => {
-    return Config.KEYS_CONFIGURABLE.indexOf(Config.env_var_format(option_name)) !== -1;
+    return BaseConfig.KEYS_CONFIGURABLE.indexOf(BaseConfig.env_var_format(option_name)) !== -1;
   }
 
   static list_configurable = (cmd_line=false) => {
     if(cmd_line) {
-      return Config.KEYS_CONFIGURABLE.map(Config.cmd_line_format);
+      return BaseConfig.KEYS_CONFIGURABLE.map(BaseConfig.cmd_line_format);
     }
-    return Config.KEYS_CONFIGURABLE;
+    return BaseConfig.KEYS_CONFIGURABLE;
   }
 
   static get_api_port = (cmd_line_port: string|undefined): number => {

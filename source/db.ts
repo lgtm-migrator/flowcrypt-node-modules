@@ -2,7 +2,7 @@
 import * as pg from 'pg';
 import * as util from './util';
 import {Log} from './log';
-import {Config} from './config';
+import {BaseConfig} from './config';
 import {readFileSync} from 'fs';
 
 type DbValue = string|boolean|number|null;
@@ -16,7 +16,7 @@ export class Db {
   private ERRCODE_SERIALIZATION_FAILURE = '40001';
   private ERRCODE_DUPLICTE_KEY_VIOLATION = '23505';
 
-  constructor(config: Config) {
+  constructor(config: BaseConfig) {
     this.log = new Log(config);
     this.pool = new pg.Pool({
       user: config.DB_USER,
@@ -29,8 +29,8 @@ export class Db {
         rejectUnauthorized: false,
         requestCert: true,
         ca: readFileSync(`${config.DB_CERTS_PATH}/ca.crt`).toString(),
-        key: readFileSync(`${config.DB_CERTS_PATH}/client.user_sks_sponge.key`).toString(),
-        cert: readFileSync(`${config.DB_CERTS_PATH}/client.user_sks_sponge.crt`).toString(),
+        key: readFileSync(`${config.DB_CERTS_PATH}/client.${config.DB_USER}.key`).toString(),
+        cert: readFileSync(`${config.DB_CERTS_PATH}/client.${config.DB_USER}.crt`).toString(),
       },
     });
   }

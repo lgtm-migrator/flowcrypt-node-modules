@@ -1,27 +1,27 @@
 
-import {Config, LOG_LEVELS} from './config';
+import {BaseConfig, LOG_LEVELS} from './config';
 import {append_file} from './util';
-
-enum LOG_PREFIX {
-  error = 'SKS_SPONGE_ERROR',
-  warning = 'SKS_SPONGE_WARNING',
-  info = 'SKS_SPONGE_INFO',
-  access = '',
-  debug = '',
-}
 
 export class Log {
 
   LOG_FILE: string|null;
   LOG_LEVEL: LOG_LEVELS;
+  LOG_PREFIX: {error: string, warning: string, info: string, access: string, debug: string};
 
-  constructor(config: Config) {
-    this.LOG_FILE = config.LOG_DIRECTORY ? `${config.LOG_DIRECTORY}/sks_sponge` : null;
+  constructor(config: BaseConfig) {
+    this.LOG_FILE = config.LOG_DIRECTORY ? `${config.LOG_DIRECTORY}/${config.APP_NAME}` : null;
     this.LOG_LEVEL = config.LOG_LEVEL;
+    this.LOG_PREFIX = {
+      error: `${config.APP_NAME.toUpperCase()}_ERROR`,
+      warning: `${config.APP_NAME.toUpperCase()}_WARNING`,
+      info: `${config.APP_NAME.toUpperCase()}_INFO`,
+      access: '',
+      debug: '',
+    };
   }
 
   static _fatal = (message: string) => {
-    message = Log.prefix_text(message, LOG_PREFIX.error);
+    message = Log.prefix_text(message, 'ERROR');
     console.log(message);
     process.exit(1);
   }
@@ -40,26 +40,26 @@ export class Log {
   }
 
   error = async (message: string, exit=false) => {
-    await this.log_to_stdout_and_file(message, LOG_LEVELS.error, LOG_PREFIX.error);
+    await this.log_to_stdout_and_file(message, LOG_LEVELS.error, this.LOG_PREFIX.error);
     if(exit) {
       process.exit(1);
     }
   }
 
   warning = async (message: string) => {
-    await this.log_to_stdout_and_file(message, LOG_LEVELS.warning, LOG_PREFIX.warning);
+    await this.log_to_stdout_and_file(message, LOG_LEVELS.warning, this.LOG_PREFIX.warning);
   }
 
   info = async (message: string) => {
-    await this.log_to_stdout_and_file(message, LOG_LEVELS.info, LOG_PREFIX.info);
+    await this.log_to_stdout_and_file(message, LOG_LEVELS.info, this.LOG_PREFIX.info);
   }
 
   access = async (message: string) => {
-    await this.log_to_stdout_and_file(message, LOG_LEVELS.access, LOG_PREFIX.access);
+    await this.log_to_stdout_and_file(message, LOG_LEVELS.access, this.LOG_PREFIX.access);
   }
 
   debug = async (message: string) => {
-    await this.log_to_stdout_and_file(message, LOG_LEVELS.debug, LOG_PREFIX.debug);
+    await this.log_to_stdout_and_file(message, LOG_LEVELS.debug, this.LOG_PREFIX.debug);
   }
 
   private static prefix_text = (text: string, prefix: string) => {
@@ -77,7 +77,7 @@ export class Log {
         try {
           await append_file(this.LOG_FILE, message);
         } catch(e) {
-          await this.log_to_stdout_and_file(`Failed to log to file (${String(e)}):\n${message}`, LOG_LEVELS.error, LOG_PREFIX.error, false);
+          await this.log_to_stdout_and_file(`Failed to log to file (${String(e)}):\n${message}`, LOG_LEVELS.error, this.LOG_PREFIX.error, false);
         }
       }
     }
