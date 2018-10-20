@@ -4,7 +4,7 @@ const config_1 = require("./config");
 const context_1 = require("./context");
 const log_1 = require("./log");
 const db_1 = require("./db");
-exports.command = (cmd, allow_options, ConfigConstructor, cb) => {
+exports.new_command = (cmd, allow_options, ConfigConstructor, cb) => {
     return (all_opt, ...args) => {
         let local_opt = {};
         let global_opt = {};

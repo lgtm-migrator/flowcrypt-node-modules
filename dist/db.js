@@ -70,9 +70,9 @@ class Db {
     }
 }
 exports.Db = Db;
-class Sql {
+class SqlBuilder {
 }
-Sql.insert = (table, columns, sql_pattern, array_of_value_arrays, add = '') => {
+SqlBuilder.insert = (table, columns, sql_pattern, array_of_value_arrays, add = '') => {
     columns = `"${columns.split(',').join('","')}"`;
     let values = [];
     let rows = [];
@@ -84,7 +84,7 @@ Sql.insert = (table, columns, sql_pattern, array_of_value_arrays, add = '') => {
     let text = `INSERT INTO ${table}(${columns}) VALUES (${rows.join('),(')}) ${add};`;
     return { text, values };
 };
-Sql.prepare = (sql, fill_values) => {
+SqlBuilder.prepare = (sql, fill_values) => {
     let i = 1;
     let fill_values_i = 0;
     let values = [];
@@ -100,7 +100,7 @@ Sql.prepare = (sql, fill_values) => {
     });
     return { text, values };
 };
-Sql.on_conflict = (column, update_columns, where) => {
+SqlBuilder.on_conflict = (column, update_columns, where) => {
     return `ON CONFLICT (${column}) DO UPDATE SET ${update_columns.map(c => `${c} = excluded.${c}`).join(',')} WHERE ${where || 'TRUE'}`;
 };
 //# sourceMappingURL=db.js.map

@@ -9,6 +9,8 @@ type DbValue = string|boolean|number|null;
 
 export class Db {
 
+  public sql: SqlBuilder;
+
   private pool: pg.Pool;
   private log: Log;
 
@@ -79,7 +81,7 @@ export class Db {
 
 }
 
-class Sql {
+class SqlBuilder {
 
   static insert = (table: string, columns: string, sql_pattern: string, array_of_value_arrays: DbValue[][], add:string=''): pg.QueryConfig => {
     columns = `"${columns.split(',').join('","')}"`;

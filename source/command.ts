@@ -4,7 +4,7 @@ import {Context} from './context';
 import {Log} from './log';
 import {Db} from './db';
 
-export const command = (cmd: string, allow_options: string[], ConfigConstructor: typeof BaseConfig, cb: (context: Context, local_opt: CommandLineOptions, ...args: string[]) => void) => {
+export const new_command = (cmd: string, allow_options: string[], ConfigConstructor: typeof BaseConfig, cb: (context: Context, local_opt: CommandLineOptions, ...args: string[]) => void) => {
   return (all_opt: CommandLineOptions, ...args: string[]) => {
     let local_opt: CommandLineOptions = {};
     let global_opt: CommandLineOptions = {};

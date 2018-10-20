@@ -13,11 +13,6 @@
       "outDir": "dist"
   },
   "files": [
-    "source/command.ts",
-    "source/config.ts",
-    "source/context.ts",
-    "source/db.ts",
-    "source/log.ts",
-    "source/util.ts"
+    "source/index.ts"
   ]
 }
