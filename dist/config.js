@@ -10,8 +10,9 @@ var LOG_LEVELS;
     LOG_LEVELS[LOG_LEVELS["access"] = 3] = "access";
     LOG_LEVELS[LOG_LEVELS["debug"] = 4] = "debug";
 })(LOG_LEVELS = exports.LOG_LEVELS || (exports.LOG_LEVELS = {}));
-class Config {
+class BaseConfig {
     constructor(cmd_line_options) {
+        this.APP_NAME = 'app';
         this.LOG_LEVEL = LOG_LEVELS.info;
         this.LOG_DIRECTORY = '';
         this.DB_HOST = '127.0.0.1';
@@ -75,7 +76,7 @@ class Config {
             }
         };
         for (let name of Object.keys(process.env)) {
-            if (Config.KEYS_CONFIGURABLE.indexOf(name) !== -1) {
+            if (BaseConfig.KEYS_CONFIGURABLE.indexOf(name) !== -1) {
                 this.set_option(name, process.env[name]);
             }
         }
@@ -85,23 +86,23 @@ class Config {
         // @ts-ignore
         let format_config_line = (k) => `Config ${k}=${this[k]}`;
         this.log = new log_1.Log(this);
-        this.log.debug(Config.KEYS_CONFIGURABLE.map(format_config_line).join('\n'));
+        this.log.debug(BaseConfig.KEYS_CONFIGURABLE.map(format_config_line).join('\n'));
     }
 }
-Config.KEYS_CONFIGURABLE = [
+BaseConfig.KEYS_CONFIGURABLE = [
     'LOG_LEVEL', 'LOG_DIRECTORY',
     'DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_CERTS_PATH', 'DB_INSECURE',
 ];
-Config.is_configurable = (option_name) => {
-    return Config.KEYS_CONFIGURABLE.indexOf(Config.env_var_format(option_name)) !== -1;
+BaseConfig.is_configurable = (option_name) => {
+    return BaseConfig.KEYS_CONFIGURABLE.indexOf(BaseConfig.env_var_format(option_name)) !== -1;
 };
-Config.list_configurable = (cmd_line = false) => {
+BaseConfig.list_configurable = (cmd_line = false) => {
     if (cmd_line) {
-        return Config.KEYS_CONFIGURABLE.map(Config.cmd_line_format);
+        return BaseConfig.KEYS_CONFIGURABLE.map(BaseConfig.cmd_line_format);
     }
-    return Config.KEYS_CONFIGURABLE;
+    return BaseConfig.KEYS_CONFIGURABLE;
 };
-Config.get_api_port = (cmd_line_port) => {
+BaseConfig.get_api_port = (cmd_line_port) => {
     if (cmd_line_port) {
         if (isNaN(Number(cmd_line_port))) {
             throw new Error(`Specified port is not a number: ${cmd_line_port}`);
@@ -118,11 +119,11 @@ Config.get_api_port = (cmd_line_port) => {
         return 5006;
     }
 };
-Config.cmd_line_format = (option_name) => {
+BaseConfig.cmd_line_format = (option_name) => {
     return option_name.toLowerCase().replace(/_/g, '-');
 };
-Config.env_var_format = (option_name) => {
+BaseConfig.env_var_format = (option_name) => {
     return option_name.toUpperCase().replace(/-/g, '_');
 };
-exports.Config = Config;
+exports.BaseConfig = BaseConfig;
 //# sourceMappingURL=config.js.map

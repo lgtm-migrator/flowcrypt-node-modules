@@ -63,8 +63,8 @@ class Db {
                 rejectUnauthorized: false,
                 requestCert: true,
                 ca: fs_1.readFileSync(`${config.DB_CERTS_PATH}/ca.crt`).toString(),
-                key: fs_1.readFileSync(`${config.DB_CERTS_PATH}/client.user_sks_sponge.key`).toString(),
-                cert: fs_1.readFileSync(`${config.DB_CERTS_PATH}/client.user_sks_sponge.crt`).toString(),
+                key: fs_1.readFileSync(`${config.DB_CERTS_PATH}/client.${config.DB_USER}.key`).toString(),
+                cert: fs_1.readFileSync(`${config.DB_CERTS_PATH}/client.${config.DB_USER}.crt`).toString(),
             },
         });
     }

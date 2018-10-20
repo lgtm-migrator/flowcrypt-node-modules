@@ -34,7 +34,7 @@ exports.chunks = (array, size) => {
     }
     return results;
 };
-exports.random = (length = 5) => {
+exports.lousy_random = (length = 5) => {
     let id = '';
     let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
     for (let i = 0; i < length; i++) {

@@ -8,7 +8,8 @@ export declare enum LOG_LEVELS {
 export declare type CommandLineOptions = {
     [name: string]: string;
 };
-export declare class Config {
+export declare class BaseConfig {
+    APP_NAME: string;
     LOG_LEVEL: LOG_LEVELS;
     LOG_DIRECTORY: string;
     DB_HOST: string;

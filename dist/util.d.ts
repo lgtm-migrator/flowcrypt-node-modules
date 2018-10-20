@@ -11,4 +11,4 @@ export declare let uint8_to_str: (u8a: Uint8Array) => string;
 export declare let keyid_bytes_to_hex: (bytes: string) => string;
 export declare let wait: (ms: number) => Promise<{}>;
 export declare let chunks: <T>(array: T[], size: number) => T[][];
-export declare let random: (length?: number) => string;
+export declare let lousy_random: (length?: number) => string;

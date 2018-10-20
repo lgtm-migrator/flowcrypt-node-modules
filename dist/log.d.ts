@@ -1,8 +1,15 @@
-import { Config, LOG_LEVELS } from './config';
+import { BaseConfig, LOG_LEVELS } from './config';
 export declare class Log {
     LOG_FILE: string | null;
     LOG_LEVEL: LOG_LEVELS;
-    constructor(config: Config);
+    LOG_PREFIX: {
+        error: string;
+        warning: string;
+        info: string;
+        access: string;
+        debug: string;
+    };
+    constructor(config: BaseConfig);
     static _fatal: (message: string) => void;
     fatal: (message: string) => void;
     exception: (e: Error, details?: string | undefined, exit?: boolean) => Promise<void>;
