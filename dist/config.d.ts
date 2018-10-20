@@ -20,7 +20,7 @@ export declare class BaseConfig {
     DB_INSECURE: boolean;
     private log;
     private static KEYS_CONFIGURABLE;
-    constructor(cmd_line_options: CommandLineOptions);
+    constructor(app_name: string, cmd_line_options: CommandLineOptions);
     static is_configurable: (option_name: string) => boolean;
     static list_configurable: (cmd_line?: boolean) => string[];
     static get_api_port: (cmd_line_port: string | undefined) => number;

@@ -50,16 +50,19 @@ class Log {
         this.LOG_FILE = config.LOG_DIRECTORY ? `${config.LOG_DIRECTORY}/${config.APP_NAME}` : null;
         this.LOG_LEVEL = config.LOG_LEVEL;
         this.LOG_PREFIX = {
-            error: `${config.APP_NAME.toUpperCase()}_ERROR`,
-            warning: `${config.APP_NAME.toUpperCase()}_WARNING`,
-            info: `${config.APP_NAME.toUpperCase()}_INFO`,
+            error: Log.build_prefix(config.APP_NAME, 'ERROR'),
+            warning: Log.build_prefix(config.APP_NAME, 'WARNING'),
+            info: Log.build_prefix(config.APP_NAME, 'INFO'),
             access: '',
             debug: '',
         };
     }
 }
-Log._fatal = (message) => {
-    message = Log.prefix_text(message, 'ERROR');
+Log.build_prefix = (app_name, prefix) => {
+    return `${app_name.toUpperCase()}_${prefix}`;
+};
+Log._fatal = (app_name, message) => {
+    message = Log.prefix_text(message, Log.build_prefix(app_name, 'ERROR'));
     console.log(message);
     process.exit(1);
 };

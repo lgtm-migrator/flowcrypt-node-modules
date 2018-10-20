@@ -11,8 +11,7 @@ var LOG_LEVELS;
     LOG_LEVELS[LOG_LEVELS["debug"] = 4] = "debug";
 })(LOG_LEVELS = exports.LOG_LEVELS || (exports.LOG_LEVELS = {}));
 class BaseConfig {
-    constructor(cmd_line_options) {
-        this.APP_NAME = 'app';
+    constructor(app_name, cmd_line_options) {
         this.LOG_LEVEL = LOG_LEVELS.info;
         this.LOG_DIRECTORY = '';
         this.DB_HOST = '127.0.0.1';
@@ -75,6 +74,7 @@ class BaseConfig {
                 throw new Error(`Unknown config variable: ${name}`);
             }
         };
+        this.APP_NAME = app_name;
         for (let name of Object.keys(process.env)) {
             if (BaseConfig.KEYS_CONFIGURABLE.indexOf(name) !== -1) {
                 this.set_option(name, process.env[name]);

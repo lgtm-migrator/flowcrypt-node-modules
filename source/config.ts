@@ -14,7 +14,7 @@ export type CommandLineOptions = {[name: string]: string};
 
 export class BaseConfig {
 
-  APP_NAME = 'app';
+  APP_NAME: string;
   LOG_LEVEL = LOG_LEVELS.info;
   LOG_DIRECTORY = '';
   DB_HOST = '127.0.0.1';
@@ -31,7 +31,8 @@ export class BaseConfig {
     'DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_CERTS_PATH', 'DB_INSECURE',
   ];
 
-  constructor(cmd_line_options: CommandLineOptions) {
+  constructor(app_name: string, cmd_line_options: CommandLineOptions) {
+    this.APP_NAME = app_name;
     for(let name of Object.keys(process.env)) {
       if(BaseConfig.KEYS_CONFIGURABLE.indexOf(name) !== -1) {
         this.set_option(name, process.env[name]!);
@@ -73,7 +74,7 @@ export class BaseConfig {
     }
   }
 
-  validate = async () => {
+  public validate = async () => {
     if(!this.DB_INSECURE && !this.DB_CERTS_PATH) {
       await this.log.error('Certs path is required when running in secure db mode\neither run with --db-insecure or --db-certs-path=folder', true);
     }

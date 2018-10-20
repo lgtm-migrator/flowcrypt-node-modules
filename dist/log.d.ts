@@ -10,8 +10,9 @@ export declare class Log {
         debug: string;
     };
     constructor(config: BaseConfig);
-    static _fatal: (message: string) => void;
-    fatal: (message: string) => void;
+    private static build_prefix;
+    static _fatal: (app_name: string, message: string) => void;
+    fatal: (app_name: string, message: string) => void;
     exception: (e: Error, details?: string | undefined, exit?: boolean) => Promise<void>;
     error: (message: string, exit?: boolean) => Promise<void>;
     warning: (message: string) => Promise<void>;
