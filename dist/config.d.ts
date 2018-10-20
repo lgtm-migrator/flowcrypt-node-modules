@@ -24,8 +24,10 @@ export declare class BaseConfig {
     static is_configurable: (option_name: string) => boolean;
     static list_configurable: (cmd_line?: boolean) => string[];
     static get_api_port: (cmd_line_port: string | undefined) => number;
+    private exit_if_missing_file;
     validate: () => Promise<void>;
     private static cmd_line_format;
     private static env_var_format;
+    private remove_trailing_slash;
     private set_option;
 }

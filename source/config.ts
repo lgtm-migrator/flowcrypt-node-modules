@@ -74,6 +74,12 @@ export class BaseConfig {
     }
   }
 
+  private exit_if_missing_file = async (file: string, files: string[]) => {
+    if(files.indexOf(file) === -1) {
+      await this.log.error(`Missing a cert needed for secure db mode: ${this.DB_CERTS_PATH}/${file}\nadjust path with --db-certs-path=folder, run with --db-insecure or make sure the file is present`, true);
+    }
+  }
+
   public validate = async () => {
     if(!this.DB_INSECURE && !this.DB_CERTS_PATH) {
       await this.log.error('Certs path is required when running in secure db mode\neither run with --db-insecure or --db-certs-path=folder', true);
@@ -81,9 +87,9 @@ export class BaseConfig {
     if(!this.DB_INSECURE) {
       try {
         let files = await util.read_dir(this.DB_CERTS_PATH);
-        for(let file of files) {
-          await this.log.error(`Missing a cert needed for secure db mode: ${this.DB_CERTS_PATH}/${file}\nadjust path with --db-certs-path=folder, run with --db-insecure or make sure the file is present`, true);
-        }
+        await this.exit_if_missing_file('ca.crt', files);
+        await this.exit_if_missing_file(`client.${this.DB_USER}.key`, files);
+        await this.exit_if_missing_file(`client.${this.DB_USER}.crt`, files);
       } catch (e) {
         await this.log.error(`cannot access certs directory: ${e.message}\nadjust path with --db-certs-path=folder or run with --db-insecure`, true);
       }
@@ -96,6 +102,10 @@ export class BaseConfig {
 
   private static env_var_format = (option_name: string) => {
     return option_name.toUpperCase().replace(/-/g, '_');
+  }
+
+  private remove_trailing_slash = (path: string) => {
+    return path.replace(/\/$/, '');
   }
 
   private set_option = (name: string, value: string) => {
@@ -113,11 +123,11 @@ export class BaseConfig {
     } else if (name === 'DB_USER') {
       this.DB_USER = value;
     } else if (name === 'DB_CERTS_PATH') {
-      this.DB_CERTS_PATH = value;
+      this.DB_CERTS_PATH = this.remove_trailing_slash(value);
     } else if (name === 'DB_INSECURE') {
       this.DB_INSECURE = Boolean(value);
     } else if (name === 'LOG_DIRECTORY') {
-      this.LOG_DIRECTORY = value;
+      this.LOG_DIRECTORY = this.remove_trailing_slash(value);
     } else if (name === 'LOG_LEVEL') {
       let n = Number(value);
       if(isNaN(n) && n >= 0 && n <= 4) {
