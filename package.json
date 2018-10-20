@@ -1,0 +1,28 @@
+{
+  "name": "flowcrypt-node",
+  "version": "0.0.1",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "./node_modules/typescript/bin/tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FlowCrypt/flowcrypt-node.git"
+  },
+  "author": "FlowCrypt Limited",
+  "license": "All rights reserved",
+  "bugs": {
+    "url": "https://github.com/FlowCrypt/flowcrypt-node/issues"
+  },
+  "homepage": "https://github.com/FlowCrypt/flowcrypt-node#readme",
+  "dependencies": {
+    "@types/node": "^10.12.0",
+    "@types/pg": "^7.4.10",
+    "@types/request": "^2.47.1",
+    "pg": "^7.4.3",
+    "tslint": "^5.11.0",
+    "typescript": "^3.1.3"
+  },
+  "devDependencies": {}
+}
