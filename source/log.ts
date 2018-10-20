@@ -4,35 +4,31 @@ import {append_file} from './util';
 
 export class Log {
 
-  LOG_FILE: string|null;
-  LOG_LEVEL: LOG_LEVELS;
-  LOG_PREFIX: {error: string, warning: string, info: string, access: string, debug: string};
+  private config: BaseConfig;
+  private LOG_FILE: string|null;
+  private LOG_LEVEL: LOG_LEVELS;
+  private LOG_PREFIX: {error: string, warning: string, info: string, access: string, debug: string};
 
   constructor(config: BaseConfig) {
     this.LOG_FILE = config.LOG_DIRECTORY ? `${config.LOG_DIRECTORY}/${config.APP_NAME}` : null;
     this.LOG_LEVEL = config.LOG_LEVEL;
     this.LOG_PREFIX = {
-      error: Log.build_prefix(config.APP_NAME, 'ERROR'),
-      warning: Log.build_prefix(config.APP_NAME, 'WARNING'),
-      info: Log.build_prefix(config.APP_NAME, 'INFO'),
+      error: this.build_prefix(config.APP_NAME, 'ERROR'),
+      warning: this.build_prefix(config.APP_NAME, 'WARNING'),
+      info: this.build_prefix(config.APP_NAME, 'INFO'),
       access: '',
       debug: '',
     };
+    this.config = config;
   }
 
-  private static build_prefix = (app_name: string, prefix: string) => {
-    return `${app_name.toUpperCase()}_${prefix}`;
-  }
-
-  static _fatal = (app_name: string, message: string) => {
-    message = Log.prefix_text(message, Log.build_prefix(app_name, 'ERROR'));
+  public fatal = (message: string) => {
+    message = Log.prefix_text(message, this.build_prefix(this.config.APP_NAME, 'ERROR'));
     console.log(message);
     process.exit(1);
   }
 
-  fatal = Log._fatal;
-
-  exception = async (e: Error, details?: string, exit=false) => {
+  public exception = async (e: Error, details?: string, exit=false) => {
     let as_string = String(e);
     if(e instanceof Error && e.stack) {
       as_string += `\n${Log.prefix_text(e.stack, 'stack')}`;
@@ -43,26 +39,26 @@ export class Log {
     await this.error(as_string, exit);
   }
 
-  error = async (message: string, exit=false) => {
+  public error = async (message: string, exit=false) => {
     await this.log_to_stdout_and_file(message, LOG_LEVELS.error, this.LOG_PREFIX.error);
     if(exit) {
       process.exit(1);
     }
   }
 
-  warning = async (message: string) => {
+  public warning = async (message: string) => {
     await this.log_to_stdout_and_file(message, LOG_LEVELS.warning, this.LOG_PREFIX.warning);
   }
 
-  info = async (message: string) => {
+  public info = async (message: string) => {
     await this.log_to_stdout_and_file(message, LOG_LEVELS.info, this.LOG_PREFIX.info);
   }
 
-  access = async (message: string) => {
+  public access = async (message: string) => {
     await this.log_to_stdout_and_file(message, LOG_LEVELS.access, this.LOG_PREFIX.access);
   }
 
-  debug = async (message: string) => {
+  public debug = async (message: string) => {
     await this.log_to_stdout_and_file(message, LOG_LEVELS.debug, this.LOG_PREFIX.debug);
   }
 
@@ -85,6 +81,10 @@ export class Log {
         }
       }
     }
+  }
+
+  private build_prefix = (app_name: string, prefix: string) => {
+    return `${app_name.toUpperCase()}_${prefix}`;
   }
 
 }

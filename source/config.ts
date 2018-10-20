@@ -14,7 +14,10 @@ export type CommandLineOptions = {[name: string]: string};
 
 export class BaseConfig {
 
-  APP_NAME: string;
+  ['constructor']: typeof BaseConfig; // this is for TS to be happy https://github.com/Microsoft/TypeScript/issues/3841#issuecomment-337560146
+
+  API_PORT = 6000;
+  APP_NAME = 'test_app';
   LOG_LEVEL = LOG_LEVELS.info;
   LOG_DIRECTORY = '';
   DB_HOST = '127.0.0.1';
@@ -26,39 +29,44 @@ export class BaseConfig {
 
   private log: Log;
 
-  private static KEYS_CONFIGURABLE = [
+  private KEYS_CONFIGURABLE = [
     'LOG_LEVEL', 'LOG_DIRECTORY',
     'DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_CERTS_PATH', 'DB_INSECURE',
   ];
 
-  constructor(app_name: string, cmd_line_options: CommandLineOptions) {
-    this.APP_NAME = app_name;
+  constructor(cmd_line_options?: CommandLineOptions) {
     for(let name of Object.keys(process.env)) {
-      if(BaseConfig.KEYS_CONFIGURABLE.indexOf(name) !== -1) {
+      if(this.KEYS_CONFIGURABLE.indexOf(name) !== -1) {
         this.set_option(name, process.env[name]!);
       }
     }
-    for(let name of Object.keys(cmd_line_options)) {
-      this.set_option(name, cmd_line_options[name]);
+    if(cmd_line_options) {
+      for(let name of Object.keys(cmd_line_options)) {
+        this.set_option(name, cmd_line_options[name]);
+      }
+      // @ts-ignore
+      let format_config_line = (k: string) => `Config ${k}=${String(this[k])}`;
+      this.log = new Log(this);
+      this.log.debug(this.KEYS_CONFIGURABLE.map(format_config_line).join('\n'));
     }
-    // @ts-ignore
-    let format_config_line = (k: string) => `Config ${k}=${this[k] as string}`;
-    this.log = new Log(this);
-    this.log.debug(BaseConfig.KEYS_CONFIGURABLE.map(format_config_line).join('\n'));
   }
 
-  static is_configurable = (option_name: string) => {
-    return BaseConfig.KEYS_CONFIGURABLE.indexOf(BaseConfig.env_var_format(option_name)) !== -1;
+  public get_updated_config = (cmd_line_options: CommandLineOptions) => {
+    return new this.constructor(cmd_line_options);
   }
 
-  static list_configurable = (cmd_line=false) => {
+  is_configurable = (option_name: string) => {
+    return this.KEYS_CONFIGURABLE.indexOf(this.env_var_format(option_name)) !== -1;
+  }
+
+  list_configurable = (cmd_line=false) => {
     if(cmd_line) {
-      return BaseConfig.KEYS_CONFIGURABLE.map(BaseConfig.cmd_line_format);
+      return this.KEYS_CONFIGURABLE.map(this.cmd_line_format);
     }
-    return BaseConfig.KEYS_CONFIGURABLE;
+    return this.KEYS_CONFIGURABLE;
   }
 
-  static get_api_port = (cmd_line_port: string|undefined): number => {
+  get_api_port = (cmd_line_port: string|undefined): number => {
     if(cmd_line_port) {
       if(isNaN(Number(cmd_line_port))) {
         throw new Error(`Specified port is not a number: ${cmd_line_port}`);
@@ -70,7 +78,7 @@ export class BaseConfig {
       }
       return Number(process.env.PORT);
     } else {
-      return 5006;
+      return this.API_PORT;
     }
   }
 
@@ -96,11 +104,11 @@ export class BaseConfig {
     }
   }
 
-  private static cmd_line_format = (option_name: string) => {
+  private cmd_line_format = (option_name: string) => {
     return option_name.toLowerCase().replace(/_/g, '-');
   }
 
-  private static env_var_format = (option_name: string) => {
+  private env_var_format = (option_name: string) => {
     return option_name.toUpperCase().replace(/-/g, '_');
   }
 
