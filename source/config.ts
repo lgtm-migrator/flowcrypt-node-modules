@@ -12,11 +12,24 @@ export enum LOG_LEVELS {
 
 export type CommandLineOptions = {[name: string]: string};
 
-export class BaseConfig {
+type Defaults = {
+  API_PORT?: number;
+  APP_NAME?: string;
+  LOG_LEVEL?: LOG_LEVELS;
+  LOG_DIRECTORY?: string;
+  DB_HOST?: string;
+  DB_PORT?: number;
+  DB_NAME?: string;
+  DB_USER?: string;
+  DB_CERTS_PATH?: string;
+  DB_INSECURE?: boolean;
+};
 
-  ['constructor']: typeof BaseConfig; // this is for TS to be happy https://github.com/Microsoft/TypeScript/issues/3841#issuecomment-337560146
+export class Config {
 
-  API_PORT = 6000;
+  ['constructor']: typeof Config; // this is for TS to be happy https://github.com/Microsoft/TypeScript/issues/3841#issuecomment-337560146
+
+  API_PORT = 4000;
   APP_NAME = 'test_app';
   LOG_LEVEL = LOG_LEVELS.info;
   LOG_DIRECTORY = '';
@@ -34,25 +47,27 @@ export class BaseConfig {
     'DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_CERTS_PATH', 'DB_INSECURE',
   ];
 
-  constructor(cmd_line_options?: CommandLineOptions) {
+  constructor(defaults: Defaults) {
     for(let name of Object.keys(process.env)) {
       if(this.KEYS_CONFIGURABLE.indexOf(name) !== -1) {
         this.set_option(name, process.env[name]!);
       }
     }
-    if(cmd_line_options) {
-      for(let name of Object.keys(cmd_line_options)) {
-        this.set_option(name, cmd_line_options[name]);
-      }
+    for(let name of Object.keys(defaults)) {
       // @ts-ignore
-      let format_config_line = (k: string) => `Config ${k}=${String(this[k])}`;
-      this.log = new Log(this);
-      this.log.debug(this.KEYS_CONFIGURABLE.map(format_config_line).join('\n'));
+      let v = defaults[name];
+      this.set_option(name, v);
     }
   }
 
-  public get_updated_config = (cmd_line_options: CommandLineOptions) => {
-    return new this.constructor(cmd_line_options);
+  set_cmd_line_options = (cmd_line_options: CommandLineOptions) => {
+    for(let name of Object.keys(cmd_line_options)) {
+      this.set_option(name, cmd_line_options[name]);
+    }
+    // @ts-ignore
+    let format_config_line = (k: string) => `Config ${k}=${String(this[k])}`;
+    this.log = new Log(this);
+    this.log.debug(this.KEYS_CONFIGURABLE.map(format_config_line).join('\n'));
   }
 
   is_configurable = (option_name: string) => {
@@ -118,7 +133,9 @@ export class BaseConfig {
 
   private set_option = (name: string, value: string) => {
     name = name.toUpperCase().replace(/-/g, '_');
-    if(name === 'DB_HOST') {
+    if(name === 'APP_NAME') {
+      this.APP_NAME = value;
+    } else if(name === 'DB_HOST') {
       this.DB_HOST = value;
     } else if (name === 'DB_PORT') {
       let n = Number(value);
@@ -137,6 +154,9 @@ export class BaseConfig {
     } else if (name === 'LOG_DIRECTORY') {
       this.LOG_DIRECTORY = this.remove_trailing_slash(value);
     } else if (name === 'LOG_LEVEL') {
+      if(value === 'error' || value === 'warning' || value === 'info' || value === 'access' || value === 'debug') {
+        value = String(LOG_LEVELS[value]);
+      }
       let n = Number(value);
       if(isNaN(n) && n >= 0 && n <= 4) {
         throw new Error(`LOG_LEVEL: should be a number 0-4, got (${value})`);

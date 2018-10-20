@@ -1,15 +1,15 @@
 
-import {BaseConfig, LOG_LEVELS} from './config';
+import {Config, LOG_LEVELS} from './config';
 import {append_file} from './util';
 
 export class Log {
 
-  private config: BaseConfig;
+  private config: Config;
   private LOG_FILE: string|null;
   private LOG_LEVEL: LOG_LEVELS;
   private LOG_PREFIX: {error: string, warning: string, info: string, access: string, debug: string};
 
-  constructor(config: BaseConfig) {
+  constructor(config: Config) {
     this.LOG_FILE = config.LOG_DIRECTORY ? `${config.LOG_DIRECTORY}/${config.APP_NAME}` : null;
     this.LOG_LEVEL = config.LOG_LEVEL;
     this.LOG_PREFIX = {

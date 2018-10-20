@@ -2,7 +2,7 @@
 import * as pg from 'pg';
 import * as util from './util';
 import {Log} from './log';
-import {BaseConfig} from './config';
+import {Config} from './config';
 import {readFileSync} from 'fs';
 
 type DbValue = string|boolean|number|null;
@@ -18,8 +18,9 @@ export class Db {
   private ERRCODE_SERIALIZATION_FAILURE = '40001';
   private ERRCODE_DUPLICTE_KEY_VIOLATION = '23505';
 
-  constructor(config: BaseConfig) {
+  constructor(config: Config) {
     this.log = new Log(config);
+    this.log.debug('creating db pool');
     this.pool = new pg.Pool({
       user: config.DB_USER,
       host: config.DB_HOST,
@@ -35,9 +36,15 @@ export class Db {
         cert: readFileSync(`${config.DB_CERTS_PATH}/client.${config.DB_USER}.crt`).toString(),
       },
     });
+    this.log.debug('db pool created');
   }
 
-  connection = () => this.pool.connect();
+  connection = async () => {
+    this.log.debug('grabbing connection from the pool');
+    let c = await this.pool.connect();
+    this.log.debug('got connection from the pool');
+    return c;
+  }
 
   read = async (query_f: (conn: pg.PoolClient) => Promise<any>) => {
     let c = await this.connection();

@@ -1,5 +1,5 @@
 export {new_command} from './command';
-export {BaseConfig} from './config';
+export {Config} from './config';
 export {Context} from './context';
 export {Db} from './db';
 export {Log} from './log';
