@@ -11,7 +11,9 @@ var LOG_LEVELS;
     LOG_LEVELS[LOG_LEVELS["debug"] = 4] = "debug";
 })(LOG_LEVELS = exports.LOG_LEVELS || (exports.LOG_LEVELS = {}));
 class BaseConfig {
-    constructor(app_name, cmd_line_options) {
+    constructor(cmd_line_options) {
+        this.API_PORT = 6000;
+        this.APP_NAME = 'test_app';
         this.LOG_LEVEL = LOG_LEVELS.info;
         this.LOG_DIRECTORY = '';
         this.DB_HOST = '127.0.0.1';
@@ -20,6 +22,39 @@ class BaseConfig {
         this.DB_USER = 'user_test';
         this.DB_CERTS_PATH = 'certs';
         this.DB_INSECURE = false;
+        this.KEYS_CONFIGURABLE = [
+            'LOG_LEVEL', 'LOG_DIRECTORY',
+            'DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_CERTS_PATH', 'DB_INSECURE',
+        ];
+        this.get_updated_config = (cmd_line_options) => {
+            return new this.constructor(cmd_line_options);
+        };
+        this.is_configurable = (option_name) => {
+            return this.KEYS_CONFIGURABLE.indexOf(this.env_var_format(option_name)) !== -1;
+        };
+        this.list_configurable = (cmd_line = false) => {
+            if (cmd_line) {
+                return this.KEYS_CONFIGURABLE.map(this.cmd_line_format);
+            }
+            return this.KEYS_CONFIGURABLE;
+        };
+        this.get_api_port = (cmd_line_port) => {
+            if (cmd_line_port) {
+                if (isNaN(Number(cmd_line_port))) {
+                    throw new Error(`Specified port is not a number: ${cmd_line_port}`);
+                }
+                return Number(cmd_line_port);
+            }
+            else if (process.env.PORT) {
+                if (isNaN(Number(process.env.PORT))) {
+                    throw new Error(`Specified env PORT is not a number: ${process.env.PORT}`);
+                }
+                return Number(process.env.PORT);
+            }
+            else {
+                return this.API_PORT;
+            }
+        };
         this.exit_if_missing_file = async (file, files) => {
             if (files.indexOf(file) === -1) {
                 await this.log.error(`Missing a cert needed for secure db mode: ${this.DB_CERTS_PATH}/${file}\nadjust path with --db-certs-path=folder, run with --db-insecure or make sure the file is present`, true);
@@ -40,6 +75,12 @@ class BaseConfig {
                     await this.log.error(`cannot access certs directory: ${e.message}\nadjust path with --db-certs-path=folder or run with --db-insecure`, true);
                 }
             }
+        };
+        this.cmd_line_format = (option_name) => {
+            return option_name.toLowerCase().replace(/_/g, '-');
+        };
+        this.env_var_format = (option_name) => {
+            return option_name.toUpperCase().replace(/-/g, '_');
         };
         this.remove_trailing_slash = (path) => {
             return path.replace(/\/$/, '');
@@ -82,56 +123,21 @@ class BaseConfig {
                 throw new Error(`Unknown config variable: ${name}`);
             }
         };
-        this.APP_NAME = app_name;
         for (let name of Object.keys(process.env)) {
-            if (BaseConfig.KEYS_CONFIGURABLE.indexOf(name) !== -1) {
+            if (this.KEYS_CONFIGURABLE.indexOf(name) !== -1) {
                 this.set_option(name, process.env[name]);
             }
         }
-        for (let name of Object.keys(cmd_line_options)) {
-            this.set_option(name, cmd_line_options[name]);
+        if (cmd_line_options) {
+            for (let name of Object.keys(cmd_line_options)) {
+                this.set_option(name, cmd_line_options[name]);
+            }
+            // @ts-ignore
+            let format_config_line = (k) => `Config ${k}=${String(this[k])}`;
+            this.log = new log_1.Log(this);
+            this.log.debug(this.KEYS_CONFIGURABLE.map(format_config_line).join('\n'));
         }
-        // @ts-ignore
-        let format_config_line = (k) => `Config ${k}=${this[k]}`;
-        this.log = new log_1.Log(this);
-        this.log.debug(BaseConfig.KEYS_CONFIGURABLE.map(format_config_line).join('\n'));
     }
 }
-BaseConfig.KEYS_CONFIGURABLE = [
-    'LOG_LEVEL', 'LOG_DIRECTORY',
-    'DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_CERTS_PATH', 'DB_INSECURE',
-];
-BaseConfig.is_configurable = (option_name) => {
-    return BaseConfig.KEYS_CONFIGURABLE.indexOf(BaseConfig.env_var_format(option_name)) !== -1;
-};
-BaseConfig.list_configurable = (cmd_line = false) => {
-    if (cmd_line) {
-        return BaseConfig.KEYS_CONFIGURABLE.map(BaseConfig.cmd_line_format);
-    }
-    return BaseConfig.KEYS_CONFIGURABLE;
-};
-BaseConfig.get_api_port = (cmd_line_port) => {
-    if (cmd_line_port) {
-        if (isNaN(Number(cmd_line_port))) {
-            throw new Error(`Specified port is not a number: ${cmd_line_port}`);
-        }
-        return Number(cmd_line_port);
-    }
-    else if (process.env.PORT) {
-        if (isNaN(Number(process.env.PORT))) {
-            throw new Error(`Specified env PORT is not a number: ${process.env.PORT}`);
-        }
-        return Number(process.env.PORT);
-    }
-    else {
-        return 5006;
-    }
-};
-BaseConfig.cmd_line_format = (option_name) => {
-    return option_name.toLowerCase().replace(/_/g, '-');
-};
-BaseConfig.env_var_format = (option_name) => {
-    return option_name.toUpperCase().replace(/-/g, '_');
-};
 exports.BaseConfig = BaseConfig;
 //# sourceMappingURL=config.js.map

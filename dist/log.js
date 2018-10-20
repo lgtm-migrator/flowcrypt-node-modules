@@ -4,7 +4,11 @@ const config_1 = require("./config");
 const util_1 = require("./util");
 class Log {
     constructor(config) {
-        this.fatal = Log._fatal;
+        this.fatal = (message) => {
+            message = Log.prefix_text(message, this.build_prefix(this.config.APP_NAME, 'ERROR'));
+            console.log(message);
+            process.exit(1);
+        };
         this.exception = async (e, details, exit = false) => {
             let as_string = String(e);
             if (e instanceof Error && e.stack) {
@@ -47,25 +51,21 @@ class Log {
                 }
             }
         };
+        this.build_prefix = (app_name, prefix) => {
+            return `${app_name.toUpperCase()}_${prefix}`;
+        };
         this.LOG_FILE = config.LOG_DIRECTORY ? `${config.LOG_DIRECTORY}/${config.APP_NAME}` : null;
         this.LOG_LEVEL = config.LOG_LEVEL;
         this.LOG_PREFIX = {
-            error: Log.build_prefix(config.APP_NAME, 'ERROR'),
-            warning: Log.build_prefix(config.APP_NAME, 'WARNING'),
-            info: Log.build_prefix(config.APP_NAME, 'INFO'),
+            error: this.build_prefix(config.APP_NAME, 'ERROR'),
+            warning: this.build_prefix(config.APP_NAME, 'WARNING'),
+            info: this.build_prefix(config.APP_NAME, 'INFO'),
             access: '',
             debug: '',
         };
+        this.config = config;
     }
 }
-Log.build_prefix = (app_name, prefix) => {
-    return `${app_name.toUpperCase()}_${prefix}`;
-};
-Log._fatal = (app_name, message) => {
-    message = Log.prefix_text(message, Log.build_prefix(app_name, 'ERROR'));
-    console.log(message);
-    process.exit(1);
-};
 Log.prefix_text = (text, prefix) => {
     if (prefix) {
         return text.split('\n').map(line => `[${prefix}] ${line}`).join('\n');
