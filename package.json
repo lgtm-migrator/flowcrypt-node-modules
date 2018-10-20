@@ -12,7 +12,6 @@
     "url": "git+https://github.com/FlowCrypt/flowcrypt-node.git"
   },
   "author": "FlowCrypt Limited",
-  "license": "All rights reserved",
   "bugs": {
     "url": "https://github.com/FlowCrypt/flowcrypt-node/issues"
   },
