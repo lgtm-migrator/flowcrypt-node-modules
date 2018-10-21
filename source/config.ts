@@ -135,6 +135,12 @@ export class Config {
     name = name.toUpperCase().replace(/-/g, '_');
     if(name === 'APP_NAME') {
       this.APP_NAME = value;
+    } else if(name === 'API_PORT') {
+      let port = Number(value);
+      if(isNaN(port)) {
+        throw new Error('API_PORT should be a number');
+      }
+      this.API_PORT = port;
     } else if(name === 'DB_HOST') {
       this.DB_HOST = value;
     } else if (name === 'DB_PORT') {
