@@ -5,7 +5,9 @@ import {Log} from './log';
 import {Config} from './config';
 import {readFileSync} from 'fs';
 
-type DbValue = string|boolean|number|null;
+export type DbValue = string|boolean|number|null;
+
+type Querier = (query: string | pg.QueryConfig, values?: any[]) => Promise<any[]>;
 
 export class Db {
 
@@ -20,6 +22,7 @@ export class Db {
 
   constructor(config: Config) {
     this.log = new Log(config);
+    this.sql = new SqlBuilder(this.log);
     this.log.debug('creating db pool');
     this.pool = new pg.Pool({
       user: config.DB_USER,
@@ -46,14 +49,14 @@ export class Db {
     return c;
   }
 
-  read = async (query_f: (conn: pg.PoolClient) => Promise<any>) => {
+  read = async (f: (query: Querier) => Promise<any>) => {
     let c = await this.connection();
-    let r = await query_f(c);
+    let r = await f(this.get_connection_querier(c));
     await c.release();
     return r;
   }
 
-  write = async (tx_f: (conn: pg.PoolClient) => Promise<any>, retries=this.SERIALIZATION_FAILURE_RETRIES) => {
+  write = async (tx_f: (query: Querier) => Promise<any>, retries=this.SERIALIZATION_FAILURE_RETRIES) => {
     let c = await this.connection();
     await c.query('BEGIN; SAVEPOINT cockroach_restart');
     try {
@@ -62,7 +65,7 @@ export class Db {
           if(retries < this.SERIALIZATION_FAILURE_RETRIES) { // not the first try
             await util.wait(Math.round(Math.random() * 100)); // wait up to 100ms
           }
-          let result = await tx_f(c);
+          let result = await tx_f(this.get_connection_querier(c));
           await c.query('RELEASE SAVEPOINT cockroach_restart; COMMIT');
           return result;
         } catch (e) {
@@ -86,11 +89,34 @@ export class Db {
     }
   }
 
+  private get_connection_querier = (c: pg.PoolClient): Querier => {
+    return async (query, values) => {
+      let prepared_query = (typeof query === 'string' && values) ? this.sql.prepare(query, values) : query;
+      let loggable_query = typeof prepared_query === 'string' ? prepared_query : prepared_query.text;
+      try {
+        let {rows} = await c.query(prepared_query);
+        this.log.debug(`SQL[${loggable_query}]`);
+        return rows;
+      } catch(e) {
+        if(e instanceof Error && e.message && e.message.indexOf('syntax error') === 0) {
+          await this.log.error(`error: ${typeof prepared_query === 'string' ? prepared_query : prepared_query.text}`);
+        }
+        throw e;
+      }
+    };
+  }
+
 }
 
 class SqlBuilder {
 
-  static insert = (table: string, columns: string, sql_pattern: string, array_of_value_arrays: DbValue[][], add:string=''): pg.QueryConfig => {
+  private log: Log;
+
+  constructor(log: Log) {
+    this.log = log;
+  }
+
+  public insert = (table: string, columns: string, sql_pattern: string, array_of_value_arrays: DbValue[][], add:string=''): pg.QueryConfig => {
     columns = `"${columns.split(',').join('","')}"`;
     let values: DbValue[] = [];
     let rows: string[] = [];
@@ -103,11 +129,14 @@ class SqlBuilder {
     return {text, values};
   }
 
-  static prepare = (sql: string, fill_values: (DbValue|DbValue[])[]): pg.QueryConfig => {
+  public prepare = (sql: string, fill_values: (DbValue|DbValue[])[]): pg.QueryConfig => {
     let i = 1;
     let fill_values_i = 0;
     let values: DbValue[] = [];
+    let fillers = fill_values.length;
+    let placehoders = 0;
     let text = sql.replace(/\$\$\$?/g, placeholder => {
+      placehoders++;
       if(placeholder === '$$$') {
         values.push.apply(values, fill_values[fill_values_i++]);
         return values.map(v => `$${i++}`).join(',');
@@ -116,6 +145,10 @@ class SqlBuilder {
         return `$${i++}`;
       }
     });
+    if (fillers !== placehoders) {
+      this.log.error(`Following query with ${placehoders} placeholders was provided ${fillers} fillers:\n${sql}`);
+      throw new Error(`Query with ${placehoders} placeholders was provided ${fillers} fillers`);
+    }
     return {text, values};
   }
 
