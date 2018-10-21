@@ -93,13 +93,15 @@ export class Db {
     return async (query, values) => {
       let prepared_query = (typeof query === 'string' && values) ? this.sql.prepare(query, values) : query;
       let loggable_query = typeof prepared_query === 'string' ? prepared_query : prepared_query.text;
+      let debuggable_values = typeof prepared_query === 'string' ? values : prepared_query.values;
       try {
         let {rows} = await c.query(prepared_query);
         this.log.debug(`SQL[${loggable_query}]`);
         return rows;
       } catch(e) {
-        if(e instanceof Error && e.message && e.message.indexOf('syntax error') === 0) {
-          await this.log.error(`error: ${typeof prepared_query === 'string' ? prepared_query : prepared_query.text}`);
+        if(e instanceof Error && e.message && (e.message.indexOf('syntax error') === 0 || e.message.indexOf('null value in column') === 0)) {
+          await this.log.error(`error: ${loggable_query}`);
+          await this.log.debug(`error: ${JSON.stringify(debuggable_values)}`);
         }
         throw e;
       }
