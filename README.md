@@ -1,4 +1,4 @@
-# node-requests
+# flowcrypt-node
 
 Useful goodies to create microservices in Node
 
