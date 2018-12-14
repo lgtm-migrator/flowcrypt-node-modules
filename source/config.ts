@@ -10,10 +10,9 @@ export enum LOG_LEVELS {
   debug = 4,
 }
 
-export type CommandLineOptions = {[name: string]: string};
+export type CommandLineOptions = { [name: string]: string };
 
 type Defaults = {
-  API_PORT?: number;
   APP_NAME?: string;
   LOG_LEVEL?: LOG_LEVELS;
   LOG_DIRECTORY?: string;
@@ -29,7 +28,6 @@ export class Config {
 
   ['constructor']: typeof Config; // this is for TS to be happy https://github.com/Microsoft/TypeScript/issues/3841#issuecomment-337560146
 
-  API_PORT = 4000;
   APP_NAME = 'test_app';
   LOG_LEVEL = LOG_LEVELS.info;
   LOG_DIRECTORY = '';
@@ -48,12 +46,12 @@ export class Config {
   ];
 
   constructor(defaults: Defaults) {
-    for(let name of Object.keys(process.env)) {
-      if(this.KEYS_CONFIGURABLE.indexOf(name) !== -1) {
+    for (let name of Object.keys(process.env)) {
+      if (this.KEYS_CONFIGURABLE.indexOf(name) !== -1) {
         this.set_option(name, process.env[name]!);
       }
     }
-    for(let name of Object.keys(defaults)) {
+    for (let name of Object.keys(defaults)) {
       // @ts-ignore
       let v = defaults[name];
       this.set_option(name, v);
@@ -61,7 +59,7 @@ export class Config {
   }
 
   set_cmd_line_options = (cmd_line_options: CommandLineOptions) => {
-    for(let name of Object.keys(cmd_line_options)) {
+    for (let name of Object.keys(cmd_line_options)) {
       this.set_option(name, cmd_line_options[name]);
     }
     // @ts-ignore
@@ -74,40 +72,40 @@ export class Config {
     return this.KEYS_CONFIGURABLE.indexOf(this.env_var_format(option_name)) !== -1;
   }
 
-  list_configurable = (cmd_line=false) => {
-    if(cmd_line) {
+  list_configurable = (cmd_line = false) => {
+    if (cmd_line) {
       return this.KEYS_CONFIGURABLE.map(this.cmd_line_format);
     }
     return this.KEYS_CONFIGURABLE;
   }
 
-  get_api_port = (cmd_line_port: string|undefined): number => {
-    if(cmd_line_port) {
-      if(isNaN(Number(cmd_line_port))) {
+  get_api_port = (cmd_line_port: string | undefined, defaultPort: number): number => {
+    if (cmd_line_port) {
+      if (isNaN(Number(cmd_line_port))) {
         throw new Error(`Specified port is not a number: ${cmd_line_port}`);
       }
       return Number(cmd_line_port);
-    } else if(process.env.PORT) {
-      if(isNaN(Number(process.env.PORT))) {
+    } else if (process.env.PORT) {
+      if (isNaN(Number(process.env.PORT))) {
         throw new Error(`Specified env PORT is not a number: ${process.env.PORT}`);
       }
       return Number(process.env.PORT);
     } else {
-      return this.API_PORT;
+      return defaultPort;
     }
   }
 
   private exit_if_missing_file = async (file: string, files: string[]) => {
-    if(files.indexOf(file) === -1) {
+    if (files.indexOf(file) === -1) {
       await this.log.error(`Missing a cert needed for secure db mode: ${this.DB_CERTS_PATH}/${file}\nadjust path with --db-certs-path=folder, run with --db-insecure or make sure the file is present`, true);
     }
   }
 
   public validate = async () => {
-    if(!this.DB_INSECURE && !this.DB_CERTS_PATH) {
+    if (!this.DB_INSECURE && !this.DB_CERTS_PATH) {
       await this.log.error('Certs path is required when running in secure db mode\neither run with --db-insecure or --db-certs-path=folder', true);
     }
-    if(!this.DB_INSECURE) {
+    if (!this.DB_INSECURE) {
       try {
         let files = await util.read_dir(this.DB_CERTS_PATH);
         await this.exit_if_missing_file('ca.crt', files);
@@ -133,19 +131,13 @@ export class Config {
 
   private set_option = (name: string, value: string) => {
     name = name.toUpperCase().replace(/-/g, '_');
-    if(name === 'APP_NAME') {
+    if (name === 'APP_NAME') {
       this.APP_NAME = value;
-    } else if(name === 'API_PORT') {
-      let port = Number(value);
-      if(isNaN(port)) {
-        throw new Error('API_PORT should be a number');
-      }
-      this.API_PORT = port;
-    } else if(name === 'DB_HOST') {
+    } else if (name === 'DB_HOST') {
       this.DB_HOST = value;
     } else if (name === 'DB_PORT') {
       let n = Number(value);
-      if(isNaN(n)) {
+      if (isNaN(n)) {
         throw new Error(`DB_PORT: not a number (${value})`);
       }
       this.DB_PORT = Number(value);
@@ -160,11 +152,11 @@ export class Config {
     } else if (name === 'LOG_DIRECTORY') {
       this.LOG_DIRECTORY = this.remove_trailing_slash(value);
     } else if (name === 'LOG_LEVEL') {
-      if(value === 'error' || value === 'warning' || value === 'info' || value === 'access' || value === 'debug') {
+      if (value === 'error' || value === 'warning' || value === 'info' || value === 'access' || value === 'debug') {
         value = String(LOG_LEVELS[value]);
       }
       let n = Number(value);
-      if(isNaN(n) && n >= 0 && n <= 4) {
+      if (isNaN(n) && n >= 0 && n <= 4) {
         throw new Error(`LOG_LEVEL: should be a number 0-4, got (${value})`);
       }
       this.LOG_LEVEL = n as LOG_LEVELS;
