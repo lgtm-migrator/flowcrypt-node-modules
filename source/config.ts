@@ -101,18 +101,20 @@ export class Config {
     }
   }
 
-  public validate = async () => {
-    if (!this.DB_INSECURE && !this.DB_CERTS_PATH) {
-      await this.log.error('Certs path is required when running in secure db mode\neither run with --db-insecure or --db-certs-path=folder', true);
-    }
-    if (!this.DB_INSECURE) {
-      try {
-        let files = await util.read_dir(this.DB_CERTS_PATH);
-        await this.exit_if_missing_file('ca.crt', files);
-        await this.exit_if_missing_file(`client.${this.DB_USER}.key`, files);
-        await this.exit_if_missing_file(`client.${this.DB_USER}.crt`, files);
-      } catch (e) {
-        await this.log.error(`cannot access certs directory: ${e.message}\nadjust path with --db-certs-path=folder or run with --db-insecure`, true);
+  public validate = async (cmdNeedsDb: boolean) => {
+    if (cmdNeedsDb) {
+      if (!this.DB_INSECURE && !this.DB_CERTS_PATH) {
+        await this.log.error('Certs path is required when running in secure db mode\neither run with --db-insecure or --db-certs-path=folder', true);
+      }
+      if (!this.DB_INSECURE) {
+        try {
+          let files = await util.read_dir(this.DB_CERTS_PATH);
+          await this.exit_if_missing_file('ca.crt', files);
+          await this.exit_if_missing_file(`client.${this.DB_USER}.key`, files);
+          await this.exit_if_missing_file(`client.${this.DB_USER}.crt`, files);
+        } catch (e) {
+          await this.log.error(`cannot access certs directory: ${e.message}\nadjust path with --db-certs-path=folder or run with --db-insecure`, true);
+        }
       }
     }
   }
