@@ -1,30 +1,30 @@
 
-import { Config, CommandLineOptions } from './config';
+import { Config, CmdLineOpts } from './config';
 import { Context } from './context';
 import { Log } from './log';
 import { Db } from './db';
 
-export const new_command = (cmd: string, allow_options: string[], config: Config, cb: (context: Context, local_opt: CommandLineOptions, ...args: string[]) => void, cmdNeedsDb = true) => {
-  return (all_opt: CommandLineOptions, ...args: string[]) => {
-    let local_opt: CommandLineOptions = {};
-    let global_opt: CommandLineOptions = {};
-    for (let opt_name of Object.keys(all_opt)) {
-      if (config.is_configurable(opt_name)) {
-        global_opt[opt_name] = all_opt[opt_name];
-      } else if (allow_options.indexOf(opt_name as never) !== -1) {
-        local_opt[opt_name] = all_opt[opt_name];
+export const newCmd = (cmd: string, allowOpts: string[], config: Config, cb: (context: Context, localOpts: CmdLineOpts, ...args: string[]) => void, cmdNeedsDb = true) => {
+  return (allOpts: CmdLineOpts, ...args: string[]) => {
+    let localOpts: CmdLineOpts = {};
+    let globalOpts: CmdLineOpts = {};
+    for (let optName of Object.keys(allOpts)) {
+      if (config.isConfigurable(optName)) {
+        globalOpts[optName] = allOpts[optName];
+      } else if (allowOpts.indexOf(optName as never) !== -1) {
+        localOpts[optName] = allOpts[optName];
       } else {
-        new Log(config).fatal(`Unknown option for ${cmd}: ${opt_name}. Allowed options: ${allow_options}\nAllowed global options: ${config.list_configurable(true)}`);
+        new Log(config).fatal(`Unknown option for ${cmd}: ${optName}. Allowed options: ${allowOpts}\nAllowed global options: ${config.listConfigurable(true)}`);
       }
     }
-    config.set_cmd_line_options(global_opt);
+    config.setCmdLineOpts(globalOpts);
     let log = new Log(config);
     config.validate(cmdNeedsDb).then(() => {
       let db: Db | undefined;
       if (cmdNeedsDb) {
         db = new Db(config);
       }
-      cb(new Context(config, log, db), local_opt, ...args);
+      cb(new Context(config, log, db), localOpts, ...args);
     }).catch(e => log.exception(e, undefined, true));
   };
 };

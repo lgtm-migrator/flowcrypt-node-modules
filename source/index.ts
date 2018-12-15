@@ -1,4 +1,4 @@
-export { new_command } from './command';
+export { newCmd } from './command';
 export { Config } from './config';
 export { Context } from './context';
 export { Db, DbValue } from './db';

@@ -1,11 +1,11 @@
 
 import * as pg from 'pg';
 import * as util from './util';
-import {Log} from './log';
-import {Config} from './config';
-import {readFileSync} from 'fs';
+import { Log } from './log';
+import { Config } from './config';
+import { readFileSync } from 'fs';
 
-export type DbValue = string|boolean|number|null;
+export type DbValue = string | boolean | number | null;
 
 type Querier = (query: string | pg.QueryConfig, values?: any[]) => Promise<any[]>;
 
@@ -51,26 +51,26 @@ export class Db {
 
   read = async (f: (query: Querier) => Promise<any>) => {
     let c = await this.connection();
-    let r = await f(this.get_connection_querier(c));
+    let r = await f(this.getConnQuerier(c));
     await c.release();
     return r;
   }
 
-  write = async (tx_f: (query: Querier) => Promise<any>, retries=this.SERIALIZATION_FAILURE_RETRIES) => {
+  write = async (txFunction: (query: Querier) => Promise<any>, retries = this.SERIALIZATION_FAILURE_RETRIES) => {
     let c = await this.connection();
     await c.query('BEGIN; SAVEPOINT cockroach_restart');
     try {
-      while(true) {
+      while (true) {
         try {
-          if(retries < this.SERIALIZATION_FAILURE_RETRIES) { // not the first try
+          if (retries < this.SERIALIZATION_FAILURE_RETRIES) { // not the first try
             await util.wait(Math.round(Math.random() * 100)); // wait up to 100ms
           }
-          let result = await tx_f(this.get_connection_querier(c));
+          let result = await txFunction(this.getConnQuerier(c));
           await c.query('RELEASE SAVEPOINT cockroach_restart; COMMIT');
           return result;
         } catch (e) {
           retries -= 1;
-          if(e.code !== this.ERRCODE_SERIALIZATION_FAILURE) {
+          if (e.code !== this.ERRCODE_SERIALIZATION_FAILURE) {
             throw e;
           }
           if (retries <= 0) {
@@ -89,19 +89,19 @@ export class Db {
     }
   }
 
-  private get_connection_querier = (c: pg.PoolClient): Querier => {
+  private getConnQuerier = (c: pg.PoolClient): Querier => {
     return async (query, values) => {
-      let prepared_query = (typeof query === 'string' && values) ? this.sql.prepare(query, values) : query;
-      let loggable_query = typeof prepared_query === 'string' ? prepared_query : prepared_query.text;
-      let debuggable_values = typeof prepared_query === 'string' ? values : prepared_query.values;
+      let preparedQuery = (typeof query === 'string' && values) ? this.sql.prepare(query, values) : query;
+      let loggableQuery = typeof preparedQuery === 'string' ? preparedQuery : preparedQuery.text;
+      let debuggableVals = typeof preparedQuery === 'string' ? values : preparedQuery.values;
       try {
-        let {rows} = await c.query(prepared_query);
-        this.log.debug(`SQL[${loggable_query}]`);
+        let { rows } = await c.query(preparedQuery);
+        this.log.debug(`SQL[${loggableQuery}]`);
         return rows;
-      } catch(e) {
-        if(e instanceof Error && e.message && (e.message.indexOf('syntax error') === 0 || e.message.indexOf('null value in column') === 0)) {
-          await this.log.error(`error: ${loggable_query}`);
-          await this.log.debug(`error: ${JSON.stringify(debuggable_values)}`);
+      } catch (e) {
+        if (e instanceof Error && e.message && (e.message.indexOf('syntax error') === 0 || e.message.indexOf('null value in column') === 0)) {
+          await this.log.error(`error: ${loggableQuery}`);
+          await this.log.debug(`error: ${JSON.stringify(debuggableVals)}`);
         }
         throw e;
       }
@@ -118,32 +118,32 @@ class SqlBuilder {
     this.log = log;
   }
 
-  public insert = (table: string, columns: string, sql_pattern: string, array_of_value_arrays: DbValue[][], add:string=''): pg.QueryConfig => {
+  public insert = (table: string, columns: string, sqlPattern: string, arrOfValArrs: DbValue[][], add: string = ''): pg.QueryConfig => {
     columns = `"${columns.split(',').join('","')}"`;
     let values: DbValue[] = [];
     let rows: string[] = [];
     let i = 1;
-    for(let value_array of array_of_value_arrays) {
-      rows.push(sql_pattern.replace(/\$\$/g, placeholder => `$${i++}`));
+    for (let value_array of arrOfValArrs) {
+      rows.push(sqlPattern.replace(/\$\$/g, placeholder => `$${i++}`));
       values.push.apply(values, value_array);
     }
     let text = `INSERT INTO ${table}(${columns}) VALUES (${rows.join('),(')}) ${add};`;
-    return {text, values};
+    return { text, values };
   }
 
-  public prepare = (sql: string, fill_values: (DbValue|DbValue[])[]): pg.QueryConfig => {
+  public prepare = (sql: string, fillVals: (DbValue | DbValue[])[]): pg.QueryConfig => {
     let i = 1;
-    let fill_values_i = 0;
+    let fillValsCounter = 0;
     let values: DbValue[] = [];
-    let fillers = fill_values.length;
+    let fillers = fillVals.length;
     let placehoders = 0;
     let text = sql.replace(/\$\$\$?/g, placeholder => {
       placehoders++;
-      if(placeholder === '$$$') {
-        values.push.apply(values, fill_values[fill_values_i++]);
+      if (placeholder === '$$$') {
+        values.push.apply(values, fillVals[fillValsCounter++]);
         return values.map(v => `$${i++}`).join(',');
       } else {
-        values.push(fill_values[fill_values_i++] as DbValue);
+        values.push(fillVals[fillValsCounter++] as DbValue);
         return `$${i++}`;
       }
     });
@@ -151,11 +151,11 @@ class SqlBuilder {
       this.log.error(`Following query with ${placehoders} placeholders was provided ${fillers} fillers:\n${sql}`);
       throw new Error(`Query with ${placehoders} placeholders was provided ${fillers} fillers`);
     }
-    return {text, values};
+    return { text, values };
   }
 
-  static on_conflict = (column: string, update_columns: string[], where?: string): string => {
-    return `ON CONFLICT (${column}) DO UPDATE SET ${update_columns.map(c => `${c} = excluded.${c}`).join(',')} WHERE ${where || 'TRUE'}`;
+  static onConflict = (column: string, updateCols: string[], where?: string): string => {
+    return `ON CONFLICT (${column}) DO UPDATE SET ${updateCols.map(c => `${c} = excluded.${c}`).join(',')} WHERE ${where || 'TRUE'}`;
   }
 
 }

@@ -1,6 +1,6 @@
 
 import { Config, LOG_LEVELS } from './config';
-import { append_file } from './util';
+import { appendFile } from './util';
 
 export class Log {
 
@@ -23,61 +23,61 @@ export class Log {
   }
 
   public fatal = (message: string) => {
-    message = Log.prefix_text(message, this.build_prefix(this.config.APP_NAME, 'ERROR'));
+    message = Log.prefixText(message, this.build_prefix(this.config.APP_NAME, 'ERROR'));
     console.log(message);
     process.exit(1);
   }
 
   public exception = async (e: Error, details?: string, exit = false) => {
-    let as_string = String(e);
+    let asStr = String(e);
     if (e instanceof Error && e.stack) {
-      as_string += `\n${Log.prefix_text(e.stack, 'stack')}`;
+      asStr += `\n${Log.prefixText(e.stack, 'stack')}`;
     }
     if (details) {
-      as_string += `\n${Log.prefix_text(details, 'details')}`;
+      asStr += `\n${Log.prefixText(details, 'details')}`;
     }
-    await this.error(as_string, exit);
+    await this.error(asStr, exit);
   }
 
   public error = async (message: string, exit = false) => {
-    await this.log_to_stdout_and_file(message, LOG_LEVELS.error, this.LOG_PREFIX.error);
+    await this.logToStdoutAndFile(message, LOG_LEVELS.error, this.LOG_PREFIX.error);
     if (exit) {
       process.exit(1);
     }
   }
 
   public warning = async (message: string) => {
-    await this.log_to_stdout_and_file(message, LOG_LEVELS.warning, this.LOG_PREFIX.warning);
+    await this.logToStdoutAndFile(message, LOG_LEVELS.warning, this.LOG_PREFIX.warning);
   }
 
   public info = async (message: string) => {
-    await this.log_to_stdout_and_file(message, LOG_LEVELS.info, this.LOG_PREFIX.info);
+    await this.logToStdoutAndFile(message, LOG_LEVELS.info, this.LOG_PREFIX.info);
   }
 
   public access = async (message: string) => {
-    await this.log_to_stdout_and_file(message, LOG_LEVELS.access, this.LOG_PREFIX.access);
+    await this.logToStdoutAndFile(message, LOG_LEVELS.access, this.LOG_PREFIX.access);
   }
 
   public debug = async (message: string) => {
-    await this.log_to_stdout_and_file(message, LOG_LEVELS.debug, this.LOG_PREFIX.debug);
+    await this.logToStdoutAndFile(message, LOG_LEVELS.debug, this.LOG_PREFIX.debug);
   }
 
-  private static prefix_text = (text: string, prefix: string) => {
+  private static prefixText = (text: string, prefix: string) => {
     if (prefix) {
       return text.split('\n').map(line => `[${prefix}] ${line}`).join('\n');
     }
     return text;
   }
 
-  private log_to_stdout_and_file = async (message: string, log_level: LOG_LEVELS, line_prefix: string = '', log_to_file: boolean = true) => {
-    if (log_level <= this.LOG_LEVEL) {
-      message = Log.prefix_text(message, line_prefix);
+  private logToStdoutAndFile = async (message: string, logLevel: LOG_LEVELS, linePrefix: string = '', logToFile: boolean = true) => {
+    if (logLevel <= this.LOG_LEVEL) {
+      message = Log.prefixText(message, linePrefix);
       console.log(message);
-      if (log_to_file && this.LOG_FILE) {
+      if (logToFile && this.LOG_FILE) {
         try {
-          await append_file(this.LOG_FILE, message);
+          await appendFile(this.LOG_FILE, message);
         } catch (e) {
-          await this.log_to_stdout_and_file(`Failed to log to file (${String(e)}):\n${message}`, LOG_LEVELS.error, this.LOG_PREFIX.error, false);
+          await this.logToStdoutAndFile(`Failed to log to file (${String(e)}):\n${message}`, LOG_LEVELS.error, this.LOG_PREFIX.error, false);
         }
       }
     }

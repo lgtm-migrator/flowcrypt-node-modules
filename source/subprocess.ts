@@ -1,5 +1,5 @@
 import * as child_process from 'child_process';
-import * as set_node_cleanup_cb from 'node-cleanup';
+import * as setNodeCleanupCb from 'node-cleanup';
 
 const PROCESSES: child_process.ChildProcess[] = [];
 const SPAWN_READINESS_TIMEOUT = 10 * 1000;
@@ -60,8 +60,8 @@ export class Subprocess {
     }
   });
 
-  public static exec = (shell_command: string): Promise<{ stdout: string, stderr: string }> => new Promise((resolve, reject) => {
-    let p: child_process.ChildProcess = child_process.exec(shell_command, (error, stdout, stderr) => error ? reject(error) : resolve({ stdout, stderr }));
+  public static exec = (shellCmd: string): Promise<{ stdout: string, stderr: string }> => new Promise((resolve, reject) => {
+    let p: child_process.ChildProcess = child_process.exec(shellCmd, (err, stdout, stderr) => err ? reject(err) : resolve({ stdout, stderr }));
     PROCESSES.push(p);
   });
 
@@ -75,7 +75,7 @@ export class Subprocess {
 
 }
 
-set_node_cleanup_cb((exit_code, signal) => {
+setNodeCleanupCb((exit_code, signal) => {
   Subprocess.killall('SIGTERM');
   return undefined;
 });
