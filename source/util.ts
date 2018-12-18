@@ -3,17 +3,21 @@ import * as fs from 'fs';
 
 export let readFile = (path: string): Promise<Buffer> => new Promise((resolve, reject) => fs.readFile(path, (e, data) => e ? reject(e) : resolve(data)));
 
-export let moveFile = (from: string, to: string): Promise<Buffer> => new Promise((resolve, reject) => fs.rename(from, to, (e) => e ? reject(e) : resolve()));
+export let moveFile = (from: string, to: string): Promise<Buffer> => new Promise((resolve, reject) => fs.rename(from, to, e => e ? reject(e) : resolve()));
 
-export let writeFile = (path: string): Promise<Buffer> => new Promise((resolve, reject) => fs.readFile(path, (e, data) => e ? reject(e) : resolve(data)));
+export let writeFile = (path: string, data: Buffer): Promise<void> => new Promise((resolve, reject) => fs.writeFile(path, data, e => e ? reject(e) : resolve()));
 
-export let appendFile = (path: string, text: string): Promise<void> => new Promise((resolve, reject) => fs.appendFile(path, text, (e) => e ? reject(e) : resolve()));
+export let appendFile = (path: string, text: string): Promise<void> => new Promise((resolve, reject) => fs.appendFile(path, text, e => e ? reject(e) : resolve()));
 
-export let deleteFile = (path: string): Promise<Buffer> => new Promise((resolve, reject) => fs.unlink(path, (e) => e ? reject(e) : resolve()));
+export let deleteFile = (path: string): Promise<Buffer> => new Promise((resolve, reject) => fs.unlink(path, e => e ? reject(e) : resolve()));
 
 export let readDir = (path: string): Promise<string[]> => new Promise((resolve, reject) => fs.readdir(path, (e, files) => e ? reject(e) : resolve(files)));
 
-export let mkDir = (path: string): Promise<void> => new Promise((resolve, reject) => fs.mkdir(path, (e) => e ? reject(e) : resolve()));
+export let mkDir = (path: string): Promise<void> => new Promise((resolve, reject) => fs.mkdir(path, e => e ? reject(e) : resolve()));
+
+export let symlink = (target: string, path: string): Promise<void> => new Promise((resolve, reject) => fs.symlink(target, path, e => e ? reject(e) : resolve()))
+
+export let access = (path: string, mode: number | undefined): Promise<void> => new Promise((resolve, reject) => fs.access(path, mode, e => e ? reject(e) : resolve()))
 
 /**
  * todo - replace with node Buffer functionality

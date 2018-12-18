@@ -5,9 +5,9 @@ import { Log } from './log';
 import { Config } from './config';
 import { readFileSync } from 'fs';
 
-export type DbValue = string | boolean | number | null;
+export type DbValue = string | boolean | number | Buffer | null;
 
-type Querier = (query: string | pg.QueryConfig, values?: any[]) => Promise<any[]>;
+export type Querier = (query: string | pg.QueryConfig, values?: any[]) => Promise<any[]>;
 
 export class Db {
 
