@@ -9,7 +9,9 @@ export let writeFile = (path: string, data: Buffer): Promise<void> => new Promis
 
 export let appendFile = (path: string, text: string): Promise<void> => new Promise((resolve, reject) => fs.appendFile(path, text, e => e ? reject(e) : resolve()));
 
-export let deleteFile = (path: string): Promise<Buffer> => new Promise((resolve, reject) => fs.unlink(path, e => e ? reject(e) : resolve()));
+export let rmFile = (path: string): Promise<void> => new Promise((resolve, reject) => fs.unlink(path, e => e ? reject(e) : resolve()));
+
+export let rmDir = (path: string): Promise<void> => new Promise((resolve, reject) => fs.rmdir(path, e => e ? reject(e) : resolve()));
 
 export let readDir = (path: string): Promise<string[]> => new Promise((resolve, reject) => fs.readdir(path, (e, files) => e ? reject(e) : resolve(files)));
 
