@@ -13,23 +13,15 @@ export class RequestsError extends Error {
 export class Requests {
 
   public static get = (options: PossibleRequestOptions): Promise<request.Response> => new Promise((resolve, reject) => {
-    request.get(options, (error, response, body) => {
-      if (error) {
-        reject(new RequestsError(error));
-      } else {
-        resolve(response);
-      }
-    });
+    request.get(options, (e, resp, body) => e ? reject(new RequestsError(e)) : resolve(resp));
   });
 
   public static post = (options: PossibleRequestOptions): Promise<request.Response> => new Promise((resolve, reject) => {
-    request.post(options, (error, response, body) => {
-      if (error) {
-        reject(new RequestsError(error));
-      } else {
-        resolve(response);
-      }
-    });
+    request.post(options, (e, resp, body) => e ? reject(new RequestsError(e)) : resolve(resp));
+  });
+
+  public static delete = (options: PossibleRequestOptions): Promise<request.Response> => new Promise((resolve, reject) => {
+    request.delete(options, (e, resp, body) => e ? reject(new RequestsError(e)) : resolve(resp));
   });
 
 }
