@@ -1,7 +1,11 @@
 import * as child_process from 'child_process';
 import * as setNodeCleanupCb from 'node-cleanup';
 
-const PROCESSES: child_process.ChildProcess[] = [];
+export interface ChildProcess extends child_process.ChildProcess {
+  exitCode?: number;
+}
+
+const PROCESSES: ChildProcess[] = [];
 const SPAWN_READINESS_TIMEOUT = 10 * 1000;
 
 export class SubprocessError extends Error {
@@ -30,9 +34,9 @@ export class Subprocess {
    */
   public static onStderr = (r: { stderr: Buffer, cmd: string, args: string[] }): void => undefined;
 
-  public static spawn = (cmd: string, rawArgs: (string | number)[], readiness_indicator?: string): Promise<child_process.ChildProcess> => new Promise((resolve, reject) => {
+  public static spawn = (cmd: string, rawArgs: (string | number)[], readiness_indicator?: string): Promise<ChildProcess> => new Promise((resolve, reject) => {
     const args = rawArgs.map(String);
-    let p = child_process.spawn(cmd, args);
+    let p: ChildProcess = child_process.spawn(cmd, args);
     PROCESSES.push(p);
     if (readiness_indicator) {
       let stdout = '';
@@ -50,6 +54,9 @@ export class Subprocess {
           resolve(p);
         }
         Subprocess.onStderr({ cmd, args, stderr: data })
+      });
+      p.on('exit', (code) => {
+        p.exitCode = code === null ? -1 : code;
       });
       setTimeout(() => {
         reject(new ProcessNotReady(`Process did not become ready in ${SPAWN_READINESS_TIMEOUT} by outputting <${readiness_indicator}>`, stderr, stdout, [cmd].concat(rawArgs as string[])));
