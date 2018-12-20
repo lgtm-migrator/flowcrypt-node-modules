@@ -54,6 +54,8 @@ export class Api {
     })
   });
 
+  public close = () => new Promise(resolve => this.server.close(resolve));
+
   protected handleReq = async (req: IncomingMessage, res: ServerResponse): Promise<Buffer> => {
     res.setHeader('content-type', 'application/json');
     if (req.url === '/' && req.method === 'GET') {
