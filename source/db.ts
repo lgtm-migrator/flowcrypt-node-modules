@@ -43,9 +43,9 @@ export class Db {
   }
 
   connection = async () => {
-    this.log.debug('grabbing connection from the pool');
+    // this.log.debug('grabbing connection from the pool');
     let c = await this.pool.connect();
-    this.log.debug('got connection from the pool');
+    // this.log.debug('got connection from the pool');
     return c;
   }
 
@@ -96,7 +96,7 @@ export class Db {
       let debuggableVals = typeof preparedQuery === 'string' ? values : preparedQuery.values;
       try {
         let { rows } = await c.query(preparedQuery);
-        this.log.debug(`SQL[${loggableQuery}]`);
+        await this.log.debug(`SQL[${loggableQuery}]`);
         return rows;
       } catch (e) {
         if (e instanceof Error && e.message && (e.message.indexOf('syntax error') === 0 || e.message.indexOf('null value in column') === 0)) {
