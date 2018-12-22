@@ -25,6 +25,11 @@ export class Api {
     this.server = http.createServer((request, response) => {
       this.handleReq(request, response).then((r) => {
         response.end(r);
+        try {
+          this.log(request, response);
+        } catch (e) {
+          context.log.exception(e);
+        }
       }).catch((e) => {
         if (e instanceof HttpAuthErr) {
           response.statusCode = 401;
@@ -37,7 +42,13 @@ export class Api {
           context.log.exception(e, `url:${request.url}`);
           response.statusCode = 500;
         }
-        response.end(this.fmtErr(e));
+        const formattedErr = this.fmtErr(e);
+        response.end(formattedErr);
+        try {
+          this.log(request, response, formattedErr);
+        } catch (e) {
+          context.log.exception(e);
+        }
       });
     });
   }
@@ -55,6 +66,8 @@ export class Api {
   });
 
   public close = () => new Promise(resolve => this.server.close(resolve));
+
+  protected log = (req: http.IncomingMessage, res: http.ServerResponse, errRes?: Buffer) => undefined as void;
 
   protected handleReq = async (req: IncomingMessage, res: ServerResponse): Promise<Buffer> => {
     res.setHeader('content-type', 'application/json');
