@@ -28,7 +28,7 @@ export class Log {
     process.exit(1);
   }
 
-  public exception = async (e: Error, details?: string, exit = false) => {
+  public exception = async (e: any, details?: string, exit = false) => {
     let asStr = String(e);
     if (e instanceof Error && e.stack) {
       asStr += `\n${Log.prefixText(e.stack, 'stack')}`;
