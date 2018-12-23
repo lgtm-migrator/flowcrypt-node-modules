@@ -65,7 +65,7 @@ export class Api {
     })
   });
 
-  public close = () => new Promise(resolve => this.server.close(resolve));
+  public close = (): Promise<void> => new Promise(resolve => this.server.close(resolve));
 
   protected log = (req: http.IncomingMessage, res: http.ServerResponse, errRes?: Buffer) => undefined as void;
 
