@@ -62,7 +62,7 @@ export class Log {
     await this.logToStdoutAndFile(message, LOG_LEVELS.debug, this.LOG_PREFIX.debug);
   }
 
-  private static prefixText = (text: string, prefix: string) => {
+  public static prefixText = (text: string, prefix: string) => {
     if (prefix) {
       return text.split('\n').map(line => `[${prefix}] ${line}`).join('\n');
     }

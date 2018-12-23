@@ -9,13 +9,9 @@ const PROCESSES: ChildProcess[] = [];
 const SPAWN_READINESS_TIMEOUT = 10 * 1000;
 
 export class SubprocessError extends Error {
-  stderr: string;
-  stdout: string;
   command: (string | number)[];
-  constructor(message: string, stderr: string, stdout: string, command: (string | number)[]) {
+  constructor(message: string, command: (string | number)[]) {
     super(message);
-    this.stderr = stderr;
-    this.stdout = stdout;
     this.command = command;
   }
 }
@@ -35,31 +31,28 @@ export class Subprocess {
   public static onStderr = (r: { stderr: Buffer, cmd: string, args: string[] }): void => undefined;
 
   public static spawn = (cmd: string, rawArgs: (string | number)[], readiness_indicator?: string): Promise<ChildProcess> => new Promise((resolve, reject) => {
+    const ready = false;
     const args = rawArgs.map(String);
     let p: ChildProcess = child_process.spawn(cmd, args);
     PROCESSES.push(p);
+    p.stdout.on('data', stdout => {
+      Subprocess.onStdout({ cmd, args, stdout: stdout });
+      if (readiness_indicator && !ready && stdout.indexOf(readiness_indicator) !== -1) {
+        resolve(p);
+      }
+    });
+    p.stderr.on('data', stderr => {
+      Subprocess.onStderr({ cmd, args, stderr: stderr });
+      if (readiness_indicator && !ready && stderr.indexOf(readiness_indicator) !== -1) {
+        resolve(p);
+      }
+    });
+    p.on('exit', (code) => {
+      p.exitCode = code === null ? -1 : code;
+    });
     if (readiness_indicator) {
-      let stdout = '';
-      let stderr = '';
-      p.stdout.on('data', data => {
-        stdout += data.toString();
-        if (stdout.indexOf(readiness_indicator) !== -1) {
-          resolve(p);
-        }
-        Subprocess.onStdout({ cmd, args, stdout: data })
-      });
-      p.stderr.on('data', data => {
-        stderr += data.toString();
-        if (stderr.indexOf(readiness_indicator) !== -1) {
-          resolve(p);
-        }
-        Subprocess.onStderr({ cmd, args, stderr: data })
-      });
-      p.on('exit', (code) => {
-        p.exitCode = code === null ? -1 : code;
-      });
       setTimeout(() => {
-        reject(new ProcessNotReady(`Process did not become ready in ${SPAWN_READINESS_TIMEOUT} by outputting <${readiness_indicator}>`, stderr, stdout, [cmd].concat(rawArgs as string[])));
+        reject(new ProcessNotReady(`Process did not become ready in ${SPAWN_READINESS_TIMEOUT} by outputting <${readiness_indicator}>`, [cmd].concat(rawArgs as string[])));
         p.kill();
       }, SPAWN_READINESS_TIMEOUT);
     } else {
