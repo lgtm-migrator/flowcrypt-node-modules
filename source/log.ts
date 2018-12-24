@@ -9,7 +9,8 @@ export class Log {
   private LOG_LEVEL: LOG_LEVELS;
   private LOG_PREFIX: { error: string, warning: string, info: string, access: string, debug: string };
   private stacklessErrors = [
-    /relation "[^"]+" does not exist/,
+    /^relation "[^"]+" does not exist$/,
+    /^connect ECONNREFUSED .*:26257$/,
   ];
 
   constructor(config: Config) {
