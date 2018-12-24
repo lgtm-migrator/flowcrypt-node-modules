@@ -60,9 +60,8 @@ export let chunks = <T>(array: T[], size: number): T[][] => {
   return results;
 };
 
-export let lousyRandom = (length: number = 5) => {
+export let lousyRandom = (length: number = 5, possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz') => {
   let id = '';
-  let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
   for (let i = 0; i < length; i++) {
     id += possible.charAt(Math.floor(Math.random() * possible.length));
   }
