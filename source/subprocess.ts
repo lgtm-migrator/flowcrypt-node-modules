@@ -2,7 +2,7 @@ import * as child_process from 'child_process';
 import * as setNodeCleanupCb from 'node-cleanup';
 
 export interface ChildProcess extends child_process.ChildProcess {
-  exitCode?: number;
+  exitCode?: number | null; // ts is missing this in def
 }
 
 const PROCESSES: ChildProcess[] = [];
@@ -47,9 +47,10 @@ export class Subprocess {
         resolve(p);
       }
     });
-    p.on('exit', (code) => {
-      p.exitCode = code === null ? -1 : code;
-    });
+    // p.on('exit', (code, signal) => {
+    //   console.log('setting exit code', code, signal);
+    //   p.exitCode = (code === null) ? -1 : code;
+    // });
     if (readiness_indicator) {
       setTimeout(() => {
         reject(new ProcessNotReady(`Process did not become ready in ${SPAWN_READINESS_TIMEOUT} by outputting <${readiness_indicator}>`, [cmd].concat(rawArgs as string[])));

@@ -8,6 +8,9 @@ export class Log {
   private LOG_FILE: string | null;
   private LOG_LEVEL: LOG_LEVELS;
   private LOG_PREFIX: { error: string, warning: string, info: string, access: string, debug: string };
+  private stacklessErrors = [
+    /relation "[^"]+" does not exist/,
+  ];
 
   constructor(config: Config) {
     this.LOG_FILE = config.LOG_DIRECTORY ? `${config.LOG_DIRECTORY}/${config.APP_NAME}` : null;
@@ -32,7 +35,9 @@ export class Log {
   public exception = async (e: any, details?: string, exit = false) => {
     let asStr = String(e);
     if (e instanceof Error && e.stack) {
-      asStr += `\n${Log.prefixText(e.stack, 'stack')}`;
+      if (!this.isStacklessError(e)) {
+        asStr += `\n${Log.prefixText(e.stack, 'stack')}`;
+      }
     }
     if (details) {
       asStr += `\n${Log.prefixText(details, 'details')}`;
@@ -86,6 +91,15 @@ export class Log {
 
   private build_prefix = (app_name: string, prefix: string) => {
     return `${app_name.toUpperCase()}_${prefix}`;
+  }
+
+  private isStacklessError(e: Error) {
+    for (const matcher of this.stacklessErrors) {
+      if (matcher.test(e.message)) {
+        return true;
+      }
+    }
+    return false;
   }
 
 }
