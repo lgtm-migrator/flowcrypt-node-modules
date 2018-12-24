@@ -23,6 +23,7 @@ export class Log {
   }
 
   public fatal = (message: string) => {
+    message = Log.prefixText(message, 'FATAL');
     message = Log.prefixText(message, this.build_prefix(this.config.APP_NAME, 'ERROR'));
     console.log(message);
     process.exit(1);
@@ -64,7 +65,7 @@ export class Log {
 
   public static prefixText = (text: string, prefix: string) => {
     if (prefix) {
-      return text.split('\n').map(line => `[${prefix}] ${line}`).join('\n');
+      return text.trim().split('\n').map(line => `[${prefix}] ${line}`).join('\n');
     }
     return text;
   }
