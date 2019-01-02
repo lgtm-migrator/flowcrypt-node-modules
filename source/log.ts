@@ -91,7 +91,7 @@ export class Log {
   }
 
   private build_prefix = (app_name: string, prefix: string) => {
-    return `${app_name.toUpperCase()}_${prefix}`;
+    return `${app_name.toUpperCase().replace(/-/g, '_')}_${prefix}`;
   }
 
   private isStacklessError(e: Error) {
