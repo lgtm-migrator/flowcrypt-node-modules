@@ -82,7 +82,7 @@ export class Log {
       console.log(message);
       if (logToFile && this.LOG_FILE) {
         try {
-          await appendFile(this.LOG_FILE, message);
+          await appendFile(this.LOG_FILE, `message\n`);
         } catch (e) {
           await this.logToStdoutAndFile(`Failed to log to file (${String(e)}):\n${message}`, LOG_LEVELS.error, this.LOG_PREFIX.error, false);
         }
