@@ -33,7 +33,7 @@ export class Subprocess {
   public static spawn = (cmd: string, rawArgs: (string | number)[], readiness_indicator?: string): Promise<ChildProcess> => new Promise((resolve, reject) => {
     const ready = false;
     const args = rawArgs.map(String);
-    let p: ChildProcess = child_process.spawn(cmd, args);
+    const p: ChildProcess = child_process.spawn(cmd, args);
     PROCESSES.push(p);
     p.stdout.on('data', stdout => {
       Subprocess.onStdout({ cmd, args, stdout: stdout });
@@ -47,10 +47,6 @@ export class Subprocess {
         resolve(p);
       }
     });
-    // p.on('exit', (code, signal) => {
-    //   console.log('setting exit code', code, signal);
-    //   p.exitCode = (code === null) ? -1 : code;
-    // });
     if (readiness_indicator) {
       setTimeout(() => {
         reject(new ProcessNotReady(`Process did not become ready in ${SPAWN_READINESS_TIMEOUT} by outputting <${readiness_indicator}>`, [cmd].concat(rawArgs as string[])));
@@ -62,18 +58,28 @@ export class Subprocess {
   });
 
   public static exec = (shellCmd: string): Promise<{ stdout: string, stderr: string }> => new Promise((resolve, reject) => {
-    let p: child_process.ChildProcess = child_process.exec(shellCmd, (err, stdout, stderr) => err ? reject(err) : resolve({ stdout, stderr }));
+    const p: child_process.ChildProcess = child_process.exec(shellCmd, (err, stdout, stderr) => err ? reject(err) : resolve({ stdout, stderr }));
     PROCESSES.push(p);
   });
 
   public static killall = (signal: 'SIGINT' | 'SIGKILL' | 'SIGTERM' = 'SIGTERM') => {
-    for (let p of PROCESSES) {
+    for (const p of PROCESSES) {
       if (!p.killed) {
         p.kill(signal);
       }
     }
   };
 
+}
+
+export const exec = async (cmd: (string | number)[]): Promise<{ exitCode: number, exitSignal: string, stderr: string, stdout: string }> => {
+  const p = await Subprocess.spawn(String(cmd[0]), cmd.slice(1));
+  const stdouts: Buffer[] = [];
+  const stderrs: Buffer[] = [];
+  p.stdout.on('data', stdout => stdouts.push(stdout));
+  p.stderr.on('data', stderr => stderrs.push(stderr));
+  const { exitCode, exitSignal } = await new Promise(resolve => p.on('exit', (exitCode, exitSignal) => resolve({ exitCode, exitSignal })));
+  return { exitCode, exitSignal, stderr: Buffer.concat(stderrs).toString(), stdout: Buffer.concat(stdouts).toString() };
 }
 
 setNodeCleanupCb((exit_code, signal) => {
