@@ -1,11 +1,9 @@
 import * as child_process from 'child_process';
 import * as setNodeCleanupCb from 'node-cleanup';
-import { util } from '.';
 
 export interface ChildProcess extends child_process.ChildProcess {
   exitCode?: number | null; // ts is missing this in def
 }
-type ExitReason = { exitCode: number | null, exitSignal: string | null };
 
 const PROCESSES: ChildProcess[] = [];
 const SPAWN_READINESS_TIMEOUT = 10 * 1000;
@@ -59,8 +57,8 @@ export class Subprocess {
     }
   });
 
-  public static exec = (shellCmd: string): Promise<{ stdout: string, stderr: string }> => new Promise((resolve, reject) => {
-    const p: child_process.ChildProcess = child_process.exec(shellCmd, (err, stdout, stderr) => err ? reject(err) : resolve({ stdout, stderr }));
+  public static exec = (file: string, ...args: (string | number)[]): Promise<{ stdout: string, stderr: string }> => new Promise((resolve, reject) => {
+    const p = child_process.execFile(file, args.map(String), (err, stdout, stderr) => err ? reject(err) : resolve({ stdout, stderr }));
     PROCESSES.push(p);
   });
 
@@ -72,19 +70,6 @@ export class Subprocess {
     }
   };
 
-}
-
-export const exec = async (cmd: (string | number)[]): Promise<{ exitCode: number, exitSignal: string | null, stderr: string, stdout: string }> => {
-  const p = await Subprocess.spawn(String(cmd[0]), cmd.slice(1));
-  const stdouts: Buffer[] = [];
-  const stderrs: Buffer[] = [];
-  p.stdout.on('data', stdout => stdouts.push(stdout));
-  p.stderr.on('data', stderr => stderrs.push(stderr));
-  const onExit = new Promise(resolve => p.on('exit', (exitCode, exitSignal) => resolve({ exitCode, exitSignal }))) as Promise<ExitReason>;
-  await new Promise(resolve => p.on('close', () => resolve())); // wait until all stdio done
-  await util.wait(1000);
-  const { exitCode, exitSignal } = await onExit;
-  return { exitCode: exitCode || -1, exitSignal, stderr: Buffer.concat(stderrs).toString(), stdout: Buffer.concat(stdouts).toString() };
 }
 
 setNodeCleanupCb((exit_code, signal) => {

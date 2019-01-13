@@ -8,5 +8,5 @@ export { Log } from './log';
 import * as module_util from './util';
 export const util = module_util;
 export { Requests, RequestsError } from './requests';
-export { Subprocess, SubprocessError, ChildProcess, exec } from './subprocess';
+export { Subprocess, SubprocessError, ChildProcess } from './subprocess';
 export { Api, RequestHandler, HttpAuthErr, HttpClientErr } from './api';
