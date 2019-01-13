@@ -1,5 +1,6 @@
 import * as child_process from 'child_process';
 import * as setNodeCleanupCb from 'node-cleanup';
+import { util } from '.';
 
 export interface ChildProcess extends child_process.ChildProcess {
   exitCode?: number | null; // ts is missing this in def
@@ -81,6 +82,7 @@ export const exec = async (cmd: (string | number)[]): Promise<{ exitCode: number
   p.stderr.on('data', stderr => stderrs.push(stderr));
   const onExit = new Promise(resolve => p.on('exit', (exitCode, exitSignal) => resolve({ exitCode, exitSignal }))) as Promise<ExitReason>;
   await new Promise(resolve => p.on('close', () => resolve())); // wait until all stdio done
+  await util.wait(1000);
   const { exitCode, exitSignal } = await onExit;
   return { exitCode: exitCode || -1, exitSignal, stderr: Buffer.concat(stderrs).toString(), stdout: Buffer.concat(stdouts).toString() };
 }
