@@ -4,6 +4,7 @@ import * as setNodeCleanupCb from 'node-cleanup';
 export interface ChildProcess extends child_process.ChildProcess {
   exitCode?: number | null; // ts is missing this in def
 }
+type ExitReason = { exitCode: number | null, exitSignal: string | null };
 
 const PROCESSES: ChildProcess[] = [];
 const SPAWN_READINESS_TIMEOUT = 10 * 1000;
@@ -72,14 +73,16 @@ export class Subprocess {
 
 }
 
-export const exec = async (cmd: (string | number)[]): Promise<{ exitCode: number, exitSignal: string, stderr: string, stdout: string }> => {
+export const exec = async (cmd: (string | number)[]): Promise<{ exitCode: number, exitSignal: string | null, stderr: string, stdout: string }> => {
   const p = await Subprocess.spawn(String(cmd[0]), cmd.slice(1));
   const stdouts: Buffer[] = [];
   const stderrs: Buffer[] = [];
   p.stdout.on('data', stdout => stdouts.push(stdout));
   p.stderr.on('data', stderr => stderrs.push(stderr));
-  const { exitCode, exitSignal } = await new Promise(resolve => p.on('exit', (exitCode, exitSignal) => resolve({ exitCode, exitSignal })));
-  return { exitCode, exitSignal, stderr: Buffer.concat(stderrs).toString(), stdout: Buffer.concat(stdouts).toString() };
+  const onExit = new Promise(resolve => p.on('exit', (exitCode, exitSignal) => resolve({ exitCode, exitSignal }))) as Promise<ExitReason>;
+  await new Promise(resolve => p.on('close', () => resolve())); // wait until all stdio done
+  const { exitCode, exitSignal } = await onExit;
+  return { exitCode: exitCode || -1, exitSignal, stderr: Buffer.concat(stderrs).toString(), stdout: Buffer.concat(stdouts).toString() };
 }
 
 setNodeCleanupCb((exit_code, signal) => {
