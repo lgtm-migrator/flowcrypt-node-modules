@@ -43,7 +43,7 @@ export let uint8ToStr = (u8a: Uint8Array): string => {
   let CHUNK_SZ = 0x8000;
   let c = [];
   for (let i = 0; i < u8a.length; i += CHUNK_SZ) {
-    c.push(String.fromCharCode.apply(null, u8a.subarray(i, i + CHUNK_SZ)));
+    c.push(String.fromCharCode.apply(null, Array.from(u8a.subarray(i, i + CHUNK_SZ))));
   }
   return c.join('');
 };

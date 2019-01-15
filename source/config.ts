@@ -38,7 +38,7 @@ export class Config {
   DB_CERTS_PATH = 'certs';
   DB_INSECURE = false;
 
-  private log: Log;
+  private log?: Log;
 
   private KEYS_CONFIGURABLE = [
     'LOG_LEVEL', 'LOG_DIRECTORY',
@@ -96,14 +96,14 @@ export class Config {
 
   private exitIfMissingFile = async (file: string, files: string[]) => {
     if (files.indexOf(file) === -1) {
-      await this.log.error(`Missing a cert needed for secure db mode: ${this.DB_CERTS_PATH}/${file}\nadjust path with --db-certs-path=folder, run with --db-insecure or make sure the file is present`, true);
+      await this.log!.error(`Missing a cert needed for secure db mode: ${this.DB_CERTS_PATH}/${file}\nadjust path with --db-certs-path=folder, run with --db-insecure or make sure the file is present`, true);
     }
   }
 
   public validate = async (cmdNeedsDb: boolean) => {
     if (cmdNeedsDb) {
       if (!this.DB_INSECURE && !this.DB_CERTS_PATH) {
-        await this.log.error('Certs path is required when running in secure db mode\neither run with --db-insecure or --db-certs-path=folder', true);
+        await this.log!.error('Certs path is required when running in secure db mode\neither run with --db-insecure or --db-certs-path=folder', true);
       }
       if (!this.DB_INSECURE) {
         try {
@@ -112,7 +112,7 @@ export class Config {
           await this.exitIfMissingFile(`client.${this.DB_USER}.key`, files);
           await this.exitIfMissingFile(`client.${this.DB_USER}.crt`, files);
         } catch (e) {
-          await this.log.error(`cannot access certs directory: ${e.message}\nadjust path with --db-certs-path=folder or run with --db-insecure`, true);
+          await this.log!.error(`cannot access certs directory: ${e.message}\nadjust path with --db-certs-path=folder or run with --db-insecure`, true);
         }
       }
     }

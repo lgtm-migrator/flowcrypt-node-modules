@@ -15,8 +15,8 @@ export class Api {
   protected apiName: string;
   protected context: Context;
   protected handlers: Handlers;
-  protected maxRequestSizeMb: number;
-  protected maxRequestSizeBytes: number;
+  protected maxRequestSizeMb = 0;
+  protected maxRequestSizeBytes = 0;
 
   constructor(context: Context, apiName: string, handlers: Handlers) {
     this.handlers = handlers;
@@ -78,6 +78,9 @@ export class Api {
       return this.fmtRes({ alive: true });
     }
     if (req.url === '/health' && req.method === 'GET') {
+      if (!this.context.db) {
+        return this.fmtRes({ error: 'no db configured' });
+      }
       const start = Date.now();
       try {
         return this.fmtRes(await this.context.db.read(async query => {
@@ -123,7 +126,7 @@ export class Api {
     let byteLength = 0;
     req.on('data', (chunk: Buffer) => {
       byteLength += chunk.length;
-      if (byteLength > this.maxRequestSizeBytes) {
+      if (this.maxRequestSizeBytes && byteLength > this.maxRequestSizeBytes) {
         reject(new HttpClientErr(`Message over ${this.maxRequestSizeMb} MB`))
       } else {
         body.push(chunk);

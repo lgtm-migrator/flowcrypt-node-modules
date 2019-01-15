@@ -26,11 +26,12 @@ export class Log {
     this.config = config;
   }
 
-  public fatal = (message: string) => {
+  public fatal = (message: string): never => {
     message = Log.prefixText(message, 'FATAL');
     message = Log.prefixText(message, this.build_prefix(this.config.APP_NAME, 'ERROR'));
-    console.log(message);
+    console.error(message);
     process.exit(1);
+    throw new Error('exited');
   }
 
   public exception = async (e: any, details?: string, exit = false) => {

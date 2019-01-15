@@ -5,7 +5,7 @@ import { Log } from './log';
 
 export class Context {
 
-  db: Db;
+  db?: Db;
   log: Log;
   config: Config;
 

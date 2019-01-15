@@ -18,7 +18,7 @@ export class Db {
 
   private SERIALIZATION_FAILURE_RETRIES = 20;
   private ERRCODE_SERIALIZATION_FAILURE = '40001';
-  private ERRCODE_DUPLICTE_KEY_VIOLATION = '23505';
+  // private ERRCODE_DUPLICTE_KEY_VIOLATION = '23505';
 
   constructor(config: Config) {
     this.log = new Log(config);
@@ -136,20 +136,23 @@ class SqlBuilder {
     let fillValsCounter = 0;
     let values: DbValue[] = [];
     let fillers = fillVals.length;
-    let placehoders = 0;
+    let placeholders = 0;
     let text = sql.replace(/\$\$\$?/g, placeholder => {
-      placehoders++;
-      if (placeholder === '$$$') {
-        values.push.apply(values, fillVals[fillValsCounter++]);
+      placeholders++;
+      const fillVal = fillVals[fillValsCounter++];
+      if (placeholder === '$$$' && Array.isArray(fillVal)) {
+        values.push(...fillVal);
         return values.map(v => `$${i++}`).join(',');
-      } else {
+      } else if (!Array.isArray(fillVal)) {
         values.push(fillVals[fillValsCounter++] as DbValue);
         return `$${i++}`;
+      } else {
+        throw new Error(`Placeholder(${placeholder}) does not match value type (${String(fillVal)})`);
       }
     });
-    if (fillers !== placehoders) {
-      this.log.error(`Following query with ${placehoders} placeholders was provided ${fillers} fillers:\n${sql}`);
-      throw new Error(`Query with ${placehoders} placeholders was provided ${fillers} fillers`);
+    if (fillers !== placeholders) {
+      this.log.error(`Following query with ${placeholders} placeholders was provided ${fillers} fillers:\n${sql}`);
+      throw new Error(`Query with ${placeholders} placeholders was provided ${fillers} fillers`);
     }
     return { text, values };
   }
