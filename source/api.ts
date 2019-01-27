@@ -28,7 +28,7 @@ export class Api {
         try {
           this.log(request, response);
         } catch (e) {
-          context.log.exception(e);
+          context.log.exception(e).catch(console.error);
         }
       }).catch((e) => {
         if (e instanceof HttpAuthErr) {
@@ -39,7 +39,7 @@ export class Api {
           response.statusCode = 400;
           e.stack = undefined;
         } else {
-          context.log.exception(e, `url:${request.url}`);
+          context.log.exception(e, `url:${request.url}`).catch(console.error);
           response.statusCode = 500;
         }
         const formattedErr = this.fmtErr(e);
@@ -47,7 +47,7 @@ export class Api {
         try {
           this.log(request, response, formattedErr);
         } catch (e) {
-          context.log.exception(e);
+          context.log.exception(e).catch(console.error);
         }
       });
     });
@@ -79,7 +79,7 @@ export class Api {
     }
     if (req.url === '/health' && req.method === 'GET') {
       if (!this.context.db) {
-        return this.fmtRes({ error: 'no db configured' });
+        return this.fmtRes({ error: { message: 'no db configured' } });
       }
       const start = Date.now();
       try {

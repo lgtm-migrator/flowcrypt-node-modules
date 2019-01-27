@@ -35,13 +35,13 @@ export class Subprocess {
     const args = rawArgs.map(String);
     const p: ChildProcess = child_process.spawn(cmd, args);
     PROCESSES.push(p);
-    p.stdout.on('data', stdout => {
+    p.stdout.on('data', (stdout: Buffer) => {
       Subprocess.onStdout({ cmd, args, stdout: stdout });
       if (readiness_indicator && !ready && stdout.indexOf(readiness_indicator) !== -1) {
         resolve(p);
       }
     });
-    p.stderr.on('data', stderr => {
+    p.stderr.on('data', (stderr: Buffer) => {
       Subprocess.onStderr({ cmd, args, stderr: stderr });
       if (readiness_indicator && !ready && stderr.indexOf(readiness_indicator) !== -1) {
         resolve(p);
