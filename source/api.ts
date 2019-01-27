@@ -4,22 +4,36 @@ import { Context } from './context';
 import { IncomingMessage, ServerResponse } from 'http';
 
 export class HttpAuthErr extends Error { }
-export class HttpClientErr extends Error { }
+export class HttpClientErr extends Error {
+  constructor(message: string, public statusCode = 400) {
+    super(message);
+  }
+}
 
-export type RequestHandler = (parsedReqBody: any, req: IncomingMessage) => Promise<any>;
-type Handlers = { [request: string]: RequestHandler };
+export enum Status {
+  OK = 200,
+  CREATED = 201,
+  BAD_REQUEST = 400,
+  UNAUTHORIZED = 401,
+  FORBIDDEN = 403,
+  NOT_FOUND = 404,
+  CONFLICT = 409, // conflicts with key on record - request needs to be verified
+  SERVER_ERROR = 500,
+  NOT_IMPLEMENTED = 501,
+}
 
-export class Api {
+export type RequestHandler<REQ, RES> = (parsedReqBody: REQ, req: IncomingMessage) => Promise<RES>;
+type Handlers<REQ, RES> = { [request: string]: RequestHandler<REQ, RES> };
+
+export class Api<REQ, RES> {
 
   public server: http.Server;
   protected apiName: string;
   protected context: Context;
-  protected handlers: Handlers;
   protected maxRequestSizeMb = 0;
   protected maxRequestSizeBytes = 0;
 
-  constructor(context: Context, apiName: string, handlers: Handlers) {
-    this.handlers = handlers;
+  constructor(context: Context, apiName: string, protected handlers: Handlers<REQ, RES>) {
     this.apiName = apiName;
     this.context = context;
     this.server = http.createServer((request, response) => {
@@ -32,15 +46,15 @@ export class Api {
         }
       }).catch((e) => {
         if (e instanceof HttpAuthErr) {
-          response.statusCode = 401;
+          response.statusCode = Status.UNAUTHORIZED;
           response.setHeader('WWW-Authenticate', `Basic realm="${this.apiName}"`);
           e.stack = undefined;
         } else if (e instanceof HttpClientErr) {
-          response.statusCode = 400;
+          response.statusCode = e.statusCode;
           e.stack = undefined;
         } else {
           context.log.exception(e, `url:${request.url}`).catch(console.error);
-          response.statusCode = 500;
+          response.statusCode = Status.SERVER_ERROR;
         }
         const formattedErr = this.fmtErr(e);
         response.end(formattedErr);
@@ -89,32 +103,32 @@ export class Api {
           return { health, db: { ms: (Date.now() - start) } };
         }));
       } catch (e) {
-        res.statusCode = 500;
+        res.statusCode = Status.SERVER_ERROR;
         return this.fmtRes({ health: 'down', error: String(e), db: { ms: (Date.now() - start) } });
       }
     }
     const handler = this.chooseHandler(req);
     if (handler) {
-      return this.fmtHandlerRes(await handler(this.parseReqBody(await this.collectReq(req)), req));
+      return this.fmtHandlerRes(await handler(this.parseReqBody(await this.collectReq(req), req), req), res);
     }
     throw new HttpClientErr(`unknown path ${req.url}`);
   }
 
-  protected chooseHandler = (req: IncomingMessage): RequestHandler => {
+  protected chooseHandler = (req: IncomingMessage): RequestHandler<REQ, RES> | undefined => {
     return this.handlers[(req.url || '').replace('/', '')];
   }
 
   protected fmtErr = (e: any): Buffer => {
     return Buffer.from(JSON.stringify({
       error: {
-        message: String(e),
+        message: String(e).replace(/^Error: /, ''),
         stack: e && typeof e === 'object' ? e.stack || '' : ''
       }
     }));
   }
 
-  protected fmtHandlerRes = (respnse: any): any => {
-    return this.fmtRes(respnse);
+  protected fmtHandlerRes = (handlerRes: RES, serverRes: ServerResponse): Buffer => {
+    return this.fmtRes(handlerRes);
   }
 
   protected fmtRes = (response: {}): Buffer => {
@@ -141,11 +155,8 @@ export class Api {
     });
   })
 
-  protected parseReqBody = (body: Buffer): any => {
+  protected parseReqBody = (body: Buffer, req: IncomingMessage): REQ => {
     return JSON.parse(body.toString());
   }
 
 }
-
-
-

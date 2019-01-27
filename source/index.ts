@@ -9,4 +9,4 @@ import * as module_util from './util';
 export const util = module_util;
 export { Requests, RequestsError } from './requests';
 export { Subprocess, SubprocessError, ChildProcess } from './subprocess';
-export { Api, RequestHandler, HttpAuthErr, HttpClientErr } from './api';
+export { Api, RequestHandler, HttpAuthErr, HttpClientErr, Status } from './api';

@@ -49,14 +49,14 @@ export class Db {
     return c;
   }
 
-  read = async (f: (query: Querier) => Promise<any>) => {
+  read = async <T>(f: (query: Querier) => Promise<T>): Promise<T> => {
     let c = await this.connection();
     let r = await f(this.getConnQuerier(c));
     await c.release();
     return r;
   }
 
-  write = async (txFunction: (query: Querier) => Promise<any>, retries = this.SERIALIZATION_FAILURE_RETRIES) => {
+  write = async <T>(txFunction: (query: Querier) => Promise<T>, retries = this.SERIALIZATION_FAILURE_RETRIES): Promise<T> => {
     let c = await this.connection();
     await c.query('BEGIN; SAVEPOINT cockroach_restart');
     try {
@@ -95,6 +95,7 @@ export class Db {
       let loggableQuery = typeof preparedQuery === 'string' ? preparedQuery : preparedQuery.text;
       let debuggableVals = typeof preparedQuery === 'string' ? values : preparedQuery.values;
       try {
+        // await this.log.debug(`[SQL]${JSON.stringify(preparedQuery, undefined, 2)}[/SQL]`); // full debug
         let { rows } = await c.query(preparedQuery);
         await this.log.debug(`SQL[${loggableQuery}]`);
         return rows;
@@ -142,9 +143,9 @@ class SqlBuilder {
       const fillVal = fillVals[fillValsCounter++];
       if (placeholder === '$$$' && Array.isArray(fillVal)) {
         values.push(...fillVal);
-        return values.map(v => `$${i++}`).join(',');
+        return fillVal.map(v => `$${i++}`).join(',');
       } else if (!Array.isArray(fillVal)) {
-        values.push(fillVals[fillValsCounter++] as DbValue);
+        values.push(fillVal);
         return `$${i++}`;
       } else {
         throw new Error(`Placeholder(${placeholder}) does not match value type (${String(fillVal)})`);
@@ -160,5 +161,7 @@ class SqlBuilder {
   static onConflict = (column: string, updateCols: string[], where?: string): string => {
     return `ON CONFLICT (${column}) DO UPDATE SET ${updateCols.map(c => `${c} = excluded.${c}`).join(',')} WHERE ${where || 'TRUE'}`;
   }
+
+  public date = (date: Date) => date.toISOString().slice(0, 19).replace('T', ' ');
 
 }

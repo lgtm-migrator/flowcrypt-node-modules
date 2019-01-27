@@ -20,6 +20,10 @@ export class Requests {
     request.post(options, (e, resp, body) => e ? reject(new RequestsError(e)) : resolve(resp));
   });
 
+  public static put = (options: PossibleRequestOptions): Promise<request.Response> => new Promise((resolve, reject) => {
+    request.put(options, (e, resp, body) => e ? reject(new RequestsError(e)) : resolve(resp));
+  });
+
   public static del = (options: PossibleRequestOptions): Promise<request.Response> => new Promise((resolve, reject) => {
     request.del(options, (e, resp, body) => e ? reject(new RequestsError(e)) : resolve(resp));
   });
