@@ -56,6 +56,7 @@ export class Api<REQ, RES> {
           context.log.exception(e, `url:${request.url}`).catch(console.error);
           response.statusCode = Status.SERVER_ERROR;
         }
+        response.setHeader('content-type', 'application/json');
         const formattedErr = this.fmtErr(e);
         response.end(formattedErr);
         try {
@@ -84,14 +85,20 @@ export class Api<REQ, RES> {
   protected log = (req: http.IncomingMessage, res: http.ServerResponse, errRes?: Buffer) => undefined as void;
 
   protected handleReq = async (req: IncomingMessage, res: ServerResponse): Promise<Buffer> => {
-    res.setHeader('content-type', 'application/json');
+    const handler = this.chooseHandler(req);
+    if (handler) {
+      return this.fmtHandlerRes(await handler(this.parseReqBody(await this.collectReq(req), req), req), res);
+    }
     if (req.url === '/' && req.method === 'GET') {
+      res.setHeader('content-type', 'application/json');
       return this.fmtRes({ app_name: this.apiName });
     }
     if (req.url === '/alive' && req.method === 'GET') {
+      res.setHeader('content-type', 'application/json');
       return this.fmtRes({ alive: true });
     }
     if (req.url === '/health' && req.method === 'GET') {
+      res.setHeader('content-type', 'application/json');
       if (!this.context.db) {
         return this.fmtRes({ error: { message: 'no db configured' } });
       }
@@ -106,10 +113,6 @@ export class Api<REQ, RES> {
         res.statusCode = Status.SERVER_ERROR;
         return this.fmtRes({ health: 'down', error: String(e), db: { ms: (Date.now() - start) } });
       }
-    }
-    const handler = this.chooseHandler(req);
-    if (handler) {
-      return this.fmtHandlerRes(await handler(this.parseReqBody(await this.collectReq(req), req), req), res);
     }
     throw new HttpClientErr(`unknown path ${req.url}`);
   }
@@ -128,6 +131,7 @@ export class Api<REQ, RES> {
   }
 
   protected fmtHandlerRes = (handlerRes: RES, serverRes: ServerResponse): Buffer => {
+    serverRes.setHeader('content-type', 'application/json');
     return this.fmtRes(handlerRes);
   }
 
