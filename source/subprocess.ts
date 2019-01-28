@@ -30,10 +30,10 @@ export class Subprocess {
    */
   public static onStderr = (r: { stderr: Buffer, cmd: string, args: string[] }): void => undefined;
 
-  public static spawn = (cmd: string, rawArgs: (string | number)[], readiness_indicator?: string): Promise<ChildProcess> => new Promise((resolve, reject) => {
+  public static spawn = (cmd: string, rawArgs: (string | number)[], readiness_indicator?: string, env?: { [k: string]: string }): Promise<ChildProcess> => new Promise((resolve, reject) => {
     const ready = false;
     const args = rawArgs.map(String);
-    const p: ChildProcess = child_process.spawn(cmd, args);
+    const p: ChildProcess = child_process.spawn(cmd, args, { env });
     PROCESSES.push(p);
     p.stdout.on('data', (stdout: Buffer) => {
       Subprocess.onStdout({ cmd, args, stdout: stdout });
