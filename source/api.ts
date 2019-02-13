@@ -74,7 +74,7 @@ export class Api<REQ, RES> {
     this.server.listen(port, host);
     this.server.on('listening', () => {
       const address = this.server.address();
-      const msg = `${this.apiName} listening on ${typeof address === 'object' ? address.port : address}`;
+      const msg = `${this.apiName} listening on ${typeof address === 'object' && address ? address.port : address}`;
       this.context.log.info(msg);
       resolve();
     })
