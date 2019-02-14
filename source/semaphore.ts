@@ -3,12 +3,9 @@
 export class Semaphore {
 
   private availableLocks: number;
-  private name: string;
-  private debug = false;
 
-  constructor(poolSize: number, name = 'semaphore') {
+  constructor(poolSize: number, private name = 'semaphore', private debug = false) {
     this.availableLocks = poolSize;
-    this.name = name;
   }
 
   private wait = () => new Promise(resolve => setTimeout(resolve, 1000 + Math.round(Math.random() * 2000))); // wait 1-3s
