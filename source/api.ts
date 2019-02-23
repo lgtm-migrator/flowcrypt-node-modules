@@ -33,7 +33,7 @@ export class Api<REQ, RES> {
   protected maxRequestSizeMb = 0;
   protected maxRequestSizeBytes = 0;
 
-  constructor(context: Context, apiName: string, protected handlers: Handlers<REQ, RES>) {
+  constructor(context: Context, apiName: string, protected handlers: Handlers<REQ, RES>, protected urlPrefix = '') {
     this.apiName = apiName;
     this.context = context;
     this.server = http.createServer((request, response) => {
@@ -89,15 +89,15 @@ export class Api<REQ, RES> {
     if (handler) {
       return this.fmtHandlerRes(await handler(this.parseReqBody(await this.collectReq(req), req), req), res);
     }
-    if (req.url === '/' && (req.method === 'GET' || req.method === 'HEAD')) {
+    if ((req.url === '/' || req.url === `${this.urlPrefix}/`) && (req.method === 'GET' || req.method === 'HEAD')) {
       res.setHeader('content-type', 'application/json');
       return this.fmtRes({ app_name: this.apiName });
     }
-    if (req.url === '/alive' && (req.method === 'GET' || req.method === 'HEAD')) {
+    if ((req.url === '/alive' || req.url === `${this.urlPrefix}/alive`) && (req.method === 'GET' || req.method === 'HEAD')) {
       res.setHeader('content-type', 'application/json');
       return this.fmtRes({ alive: true });
     }
-    if (req.url === '/health' && (req.method === 'GET' || req.method === 'HEAD')) {
+    if ((req.url === '/health' || req.url === `${this.urlPrefix}/health`) && (req.method === 'GET' || req.method === 'HEAD')) {
       res.setHeader('content-type', 'application/json');
       if (!this.context.db) {
         return this.fmtRes({ error: { message: 'no db configured' } });
