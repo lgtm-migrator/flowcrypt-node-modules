@@ -158,7 +158,7 @@ class SqlBuilder {
     return { text, values };
   }
 
-  static onConflict = (column: string, updateCols: string[], where?: string): string => {
+  public onConflict = (column: string, updateCols: string[], where?: string): string => {
     return `ON CONFLICT (${column}) DO UPDATE SET ${updateCols.map(c => `${c} = excluded.${c}`).join(',')} WHERE ${where || 'TRUE'}`;
   }
 
