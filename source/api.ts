@@ -53,7 +53,7 @@ export class Api<REQ, RES> {
           response.statusCode = e.statusCode;
           e.stack = undefined;
         } else {
-          context.log.exception(e, `url:${request.url}`).catch(console.error);
+          context.log.exception(e, `url:${request.method}:${request.url}`).catch(console.error);
           response.statusCode = Status.SERVER_ERROR;
         }
         response.setHeader('content-type', 'application/json');
