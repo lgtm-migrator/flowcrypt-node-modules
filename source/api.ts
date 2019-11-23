@@ -9,6 +9,11 @@ export class HttpClientErr extends Error {
     super(message);
   }
 }
+export class HttpNotFoundErr extends HttpClientErr {
+  constructor(message = "Not found", public statusCode = 404) {
+    super(message);
+  }
+}
 
 export enum Status {
   OK = 200,

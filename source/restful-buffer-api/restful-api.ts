@@ -1,11 +1,31 @@
 import { Context, Api, RequestHandler, HttpClientErr, Status, Dict } from '..';
 import { IncomingMessage, ServerResponse } from 'http';
+import { RestfulHandler } from './restful-handler'
 
 type Method = 'GET' | 'PUT' | 'POST' | 'DELETE';
-export type RestfulBufferReq = { method: Method; url: string; body: Buffer; query: Dict<string>; }
-export type RestfulBufferRes = { status: Status; body?: Buffer; contentType?: 'application/json' | 'text/plain' | 'text/html' }
+export type RestfulReq = { method: Method; url: string; body: Buffer; query: Dict<string>; }
+export type RestfulRes = { status: Status; body?: Buffer; contentType?: 'application/json' | 'text/plain' | 'text/html' }
 
-export class RestfulBufferApi extends Api<RestfulBufferReq, RestfulBufferRes> {
+export class RestfulApi extends Api<RestfulReq, RestfulRes> {
+
+  public static define(context: Context, apiName: string, handlers: Dict<RestfulHandler>, urlPrefix = ''): RestfulApi {
+    const handlerFunctions: { [path: string]: RequestHandler<RestfulReq, RestfulRes> } = {};
+    for (const path of Object.keys(handlers)) {
+      const handlerClass = handlers[path];
+      handlerFunctions[path] = async ({ method, query, body, url }, req): Promise<RestfulRes> => {
+        if (method === 'POST') {
+          return await handlerClass.post({ method, query, body, url }, req);
+        } else if (method === 'DELETE') {
+          return await handlerClass.delete({ method, query, body, url }, req);
+        } else if (method === 'PUT') {
+          return await handlerClass.put({ method, query, body, url }, req);
+        } else {
+          return await handlerClass.get({ method, query, body, url }, req);
+        }
+      }
+    }
+    return new RestfulApi(context, apiName, handlerFunctions, urlPrefix);
+  }
 
   private urlWithoutPrefix = (rawUrl: string | undefined) => {
     if (!rawUrl) {
@@ -25,7 +45,7 @@ export class RestfulBufferApi extends Api<RestfulBufferReq, RestfulBufferRes> {
     return { url: normalizedUrl };
   }
 
-  protected chooseHandler = (req: IncomingMessage): RequestHandler<RestfulBufferReq, RestfulBufferRes> | undefined => {
+  protected chooseHandler = (req: IncomingMessage): RequestHandler<RestfulReq, RestfulRes> | undefined => {
     let { url } = this.splitUrl(this.urlWithoutPrefix(req.url).replace(/^\//, '').replace(/\/$/, ''))
     const handler = this.handlers[url];
     if (handler) { // direct handler name match
@@ -36,7 +56,7 @@ export class RestfulBufferApi extends Api<RestfulBufferReq, RestfulBufferRes> {
     return this.handlers[`${steps.join('/')}/?`]
   }
 
-  protected fmtHandlerRes = ({ body, status, contentType }: RestfulBufferRes, serverRes: ServerResponse): Buffer => {
+  protected fmtHandlerRes = ({ body, status, contentType }: RestfulRes, serverRes: ServerResponse): Buffer => {
     serverRes.statusCode = status;
     if (contentType) {
       serverRes.setHeader('content-type', contentType);
@@ -64,7 +84,7 @@ export class RestfulBufferApi extends Api<RestfulBufferReq, RestfulBufferRes> {
     return params;
   }
 
-  protected parseReqBody = (body: Buffer, req: IncomingMessage): RestfulBufferReq => {
+  protected parseReqBody = (body: Buffer, req: IncomingMessage): RestfulReq => {
     if (req.method !== 'POST' && req.method !== 'GET' && req.method !== 'PUT' && req.method !== 'DELETE') {
       throw new HttpClientErr(`Method not supported: ${req.method}`);
     }

@@ -10,6 +10,6 @@ export const util = module_util;
 export { Requests, RequestsError } from './requests';
 export { Subprocess, SubprocessError, ChildProcess } from './subprocess';
 export { Api, RequestHandler, HttpAuthErr, HttpClientErr, Status } from './api';
-export { RestfulBufferApi, RestfulBufferReq, RestfulBufferRes } from './restful-buffer-api/restful-buffer-api';
-export { RestfulValidator } from './restful-buffer-api/restful-validator';
+export { RestfulApi, RestfulReq, RestfulRes } from './restful-buffer-api/restful-api';
+export { RestfulHandler } from './restful-buffer-api/restful-handler';
 export type Dict<T> = { [key: string]: T; };
