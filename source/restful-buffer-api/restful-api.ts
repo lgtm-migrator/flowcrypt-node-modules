@@ -4,13 +4,19 @@ import { RestfulHandler } from './restful-handler'
 
 type Method = 'GET' | 'PUT' | 'POST' | 'DELETE';
 export type RestfulReq = { method: Method; url: string; body: Buffer; query: Dict<string>; }
-export type RestfulRes = { status: Status; body?: Buffer; contentType?: 'application/json' | 'text/plain' | 'text/html' }
+export type ContentType = 'application/json' | 'text/plain' | 'text/html' | 'text/css' | 'text/javascript' | 'image/png' | 'image/jpeg' | 'text/svg';
+export type RestfulRes = { status: Status; body?: Buffer; contentType?: ContentType }
 
 export class RestfulApi extends Api<RestfulReq, RestfulRes> {
+
+  private static wildcardHandlerPaths: string[] = [];
 
   public static define(context: Context, apiName: string, handlers: Dict<RestfulHandler>, urlPrefix = ''): RestfulApi {
     const handlerFunctions: { [path: string]: RequestHandler<RestfulReq, RestfulRes> } = {};
     for (const path of Object.keys(handlers)) {
+      if (path.endsWith('/*')) {
+        RestfulApi.wildcardHandlerPaths.push(path.replace(/\*$/, ''));
+      }
       const handlerClass = handlers[path];
       handlerFunctions[path] = async ({ method, query, body, url }, req): Promise<RestfulRes> => {
         if (method === 'POST') {
@@ -53,7 +59,15 @@ export class RestfulApi extends Api<RestfulReq, RestfulRes> {
     }
     const steps = url.split('/');
     steps.pop();
-    return this.handlers[`${steps.join('/')}/?`]
+    const placeholderHandler = this.handlers[`${steps.join('/')}/?`];
+    if (placeholderHandler) {
+      return placeholderHandler;
+    }
+    const wildcardHandlerPath = RestfulApi.wildcardHandlerPaths.find(path => url.startsWith(path));
+    if (wildcardHandlerPath) {
+      return this.handlers[`${wildcardHandlerPath}*`];
+    }
+    return undefined;
   }
 
   protected fmtHandlerRes = ({ body, status, contentType }: RestfulRes, serverRes: ServerResponse): Buffer => {

@@ -1,4 +1,5 @@
 
+
 export { newCmd } from './command';
 export { Config } from './config';
 export { Context } from './context';
@@ -12,4 +13,5 @@ export { Subprocess, SubprocessError, ChildProcess } from './subprocess';
 export { Api, RequestHandler, HttpAuthErr, HttpClientErr, Status } from './api';
 export { RestfulApi, RestfulReq, RestfulRes } from './restful-buffer-api/restful-api';
 export { RestfulHandler } from './restful-buffer-api/restful-handler';
+export { AssetsHandler } from './restful-buffer-api/assets-handler';
 export type Dict<T> = { [key: string]: T; };
