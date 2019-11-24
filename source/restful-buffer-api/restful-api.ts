@@ -7,6 +7,7 @@ export type RestfulReq = { method: Method; url: string; body: Buffer; query: Dic
 export type ContentType = 'application/json' | 'text/plain' | 'text/html' | 'text/css' | 'text/javascript' | 'image/png' | 'image/jpeg' | 'text/svg';
 export type RestfulRes = { status: Status; body?: Buffer; contentType?: ContentType }
 
+
 export class RestfulApi extends Api<RestfulReq, RestfulRes> {
 
   private static wildcardHandlerPaths: string[] = [];
@@ -18,15 +19,15 @@ export class RestfulApi extends Api<RestfulReq, RestfulRes> {
         RestfulApi.wildcardHandlerPaths.push(path.replace(/\*$/, ''));
       }
       const handlerClass = handlers[path];
-      handlerFunctions[path] = async ({ method, query, body, url }, req): Promise<RestfulRes> => {
+      handlerFunctions[path] = async ({ method, query, body, url }, req, res): Promise<RestfulRes> => {
         if (method === 'POST') {
-          return await handlerClass.post({ method, query, body, url }, req);
+          return await handlerClass.post({ method, query, body, url }, req, res);
         } else if (method === 'DELETE') {
-          return await handlerClass.delete({ method, query, body, url }, req);
+          return await handlerClass.delete({ method, query, body, url }, req, res);
         } else if (method === 'PUT') {
-          return await handlerClass.put({ method, query, body, url }, req);
+          return await handlerClass.put({ method, query, body, url }, req, res);
         } else {
-          return await handlerClass.get({ method, query, body, url }, req);
+          return await handlerClass.get({ method, query, body, url }, req, res);
         }
       }
     }

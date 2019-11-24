@@ -14,10 +14,16 @@ export class HttpNotFoundErr extends HttpClientErr {
     super(message);
   }
 }
+export class HttpRedirect extends Error {
+  constructor(public url: string, public statusCode = Status.FOUND) {
+    super(`Http redirect ${statusCode}: ${url}`);
+  }
+}
 
 export enum Status {
   OK = 200,
   CREATED = 201,
+  FOUND = 302,
   BAD_REQUEST = 400,
   UNAUTHORIZED = 401,
   FORBIDDEN = 403,
@@ -27,7 +33,7 @@ export enum Status {
   NOT_IMPLEMENTED = 501,
 }
 
-export type RequestHandler<REQ, RES> = (parsedReqBody: REQ, req: IncomingMessage) => Promise<RES>;
+export type RequestHandler<REQ, RES> = (parsedReqBody: REQ, req: IncomingMessage, res: ServerResponse) => Promise<RES>;
 type Handlers<REQ, RES> = { [request: string]: RequestHandler<REQ, RES> };
 
 export class Api<REQ, RES> {
@@ -57,11 +63,17 @@ export class Api<REQ, RES> {
         } else if (e instanceof HttpClientErr) {
           response.statusCode = e.statusCode;
           e.stack = undefined;
+        } else if (e instanceof HttpRedirect) {
+          response.statusCode = e.statusCode;
+          response.setHeader('Location', e.url);
+          e.stack = undefined;
         } else {
           context.log.exception(e, `url:${request.method}:${request.url}`).catch(console.error);
           response.statusCode = Status.SERVER_ERROR;
         }
-        response.setHeader('content-type', 'application/json');
+        if (!(e instanceof HttpRedirect)) {
+          response.setHeader('content-type', 'application/json');
+        }
         const formattedErr = this.fmtErr(e);
         response.end(formattedErr);
         try {
@@ -92,7 +104,7 @@ export class Api<REQ, RES> {
   protected handleReq = async (req: IncomingMessage, res: ServerResponse): Promise<Buffer> => {
     const handler = this.chooseHandler(req);
     if (handler) {
-      return this.fmtHandlerRes(await handler(this.parseReqBody(await this.collectReq(req), req), req), res);
+      return this.fmtHandlerRes(await handler(this.parseReqBody(await this.collectReq(req), req), req, res), res);
     }
     if ((req.url === '/' || req.url === `${this.urlPrefix}/`) && (req.method === 'GET' || req.method === 'HEAD')) {
       res.setHeader('content-type', 'application/json');
