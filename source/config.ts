@@ -10,7 +10,7 @@ export enum LOG_LEVELS {
   debug = 4,
 }
 
-export type CmdLineOpts = { [name: string]: string };
+export type CmdLineOpts = { [name: string]: string | boolean };
 
 type Defaults = {
   APP_NAME?: string;
@@ -130,12 +130,12 @@ export class Config {
     return path.replace(/\/$/, '');
   }
 
-  private setOpt = (name: string, value: string) => {
+  private setOpt = (name: string, value: string | boolean) => {
     name = name.toUpperCase().replace(/-/g, '_');
     if (name === 'APP_NAME') {
-      this.APP_NAME = value;
+      this.APP_NAME = String(value);
     } else if (name === 'DB_HOST') {
-      this.DB_HOST = value;
+      this.DB_HOST = String(value);
     } else if (name === 'DB_PORT') {
       let n = Number(value);
       if (isNaN(n)) {
@@ -143,15 +143,15 @@ export class Config {
       }
       this.DB_PORT = Number(value);
     } else if (name === 'DB_NAME') {
-      this.DB_NAME = value;
+      this.DB_NAME = String(value);
     } else if (name === 'DB_USER') {
-      this.DB_USER = value;
+      this.DB_USER = String(value);
     } else if (name === 'DB_CERTS_PATH') {
-      this.DB_CERTS_PATH = this.rmTrailingSlash(value);
+      this.DB_CERTS_PATH = this.rmTrailingSlash(String(value));
     } else if (name === 'DB_INSECURE') {
       this.DB_INSECURE = Boolean(value);
     } else if (name === 'LOG_DIRECTORY') {
-      this.LOG_DIRECTORY = this.rmTrailingSlash(value);
+      this.LOG_DIRECTORY = this.rmTrailingSlash(String(value));
     } else if (name === 'LOG_LEVEL') {
       if (value === 'error' || value === 'warning' || value === 'info' || value === 'access' || value === 'debug') {
         value = String(LOG_LEVELS[value]);

@@ -6,7 +6,7 @@ import { Context } from '../context';
 
 export class RestfulHandler {
 
-  constructor(protected context: Context) {
+  constructor(protected context: Context, protected devEnv = false) {
   }
 
   protected rootUrl = process.env.SERVER_URL!.replace(/\/$/, '');

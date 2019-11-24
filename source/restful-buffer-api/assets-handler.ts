@@ -29,10 +29,10 @@ export class AssetsHandler extends RestfulHandler {
       throw new HttpNotFoundErr(`Unknown asset contentType for ${contentType}`);
     }
     const cached = this.cache[url];
-    if (cached) {
+    if (cached && !this.devEnv) {
       return { status: Status.OK, contentType, body: cached }
     }
-    if (cached === null) { // already known to be 404, don't check the disk
+    if (cached === null && !this.devEnv) { // already known to be 404, don't check the disk
       throw new HttpNotFoundErr();
     }
     try {
