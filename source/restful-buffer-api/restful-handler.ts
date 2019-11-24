@@ -3,9 +3,7 @@ import { HttpNotFoundErr, HttpClientErr } from '../api';
 import { RestfulReq } from './restful-api';
 import { IncomingMessage, ServerResponse } from 'http';
 import { Context } from '../context';
-const cookieModule = require('cookie');
 
-console.log(cookieModule);
 
 export class RestfulHandler {
 
@@ -50,22 +48,5 @@ export class RestfulHandler {
       throw new HttpClientErr('This resource is not accepting query parameters');
     }
   }
-
-  protected escape(str: string) {
-    return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\//g, '&#x2F;');
-  }
-
-  protected setCookie(res: ServerResponse, key: string, value: string) {
-    const serialized = cookieModule.serialize(key, value)
-    console.log('serialized', serialized);
-    res.setHeader('Set-Cookie', serialized);
-  }
-
-  protected getCookie(rawReq: IncomingMessage, key: string) {
-    const parsed = cookieModule.parse(rawReq.headers.cookie);
-    console.log('parsed', parsed);
-    return undefined;
-  }
-
 
 }
