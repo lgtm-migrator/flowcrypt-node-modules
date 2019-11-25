@@ -58,6 +58,14 @@ export class Config {
     }
   }
 
+  requiredEnv(optName: string): string {
+    const str = process.env[optName];
+    if (!str) {
+      throw new Error(`Missing required ENV var: ${optName}`);
+    }
+    return str;
+  }
+
   setCmdLineOpts = (cmdLineOpts: CmdLineOpts) => {
     for (let name of Object.keys(cmdLineOpts)) {
       this.setOpt(name, cmdLineOpts[name]);
