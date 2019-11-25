@@ -58,7 +58,7 @@ export class Config {
     }
   }
 
-  requiredEnv(optName: string): string {
+  static requiredEnv(optName: string): string {
     const str = process.env[optName];
     if (!str) {
       throw new Error(`Missing required ENV var: ${optName}`);
