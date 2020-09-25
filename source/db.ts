@@ -32,7 +32,7 @@ export class Db {
       min: 1,
       max: 100,
       ssl: config.DB_INSECURE ? undefined : {
-        rejectUnauthorized: true, // todo - this should say true?
+        rejectUnauthorized: true,
         checkServerIdentity: (host, cert) => host !== config.DB_HOST ? new Error(`Unexpected db host: ${host}, expected: ${config.DB_HOST}`) : undefined,
         ca: readFileSync(`${config.DB_CERTS_PATH}/ca.crt`).toString(),
         key: readFileSync(`${config.DB_CERTS_PATH}/client.${config.DB_USER}.key`).toString(),
