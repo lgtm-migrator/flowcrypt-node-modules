@@ -31,7 +31,7 @@ export class Config {
   APP_NAME = 'test_app';
   LOG_LEVEL = LOG_LEVELS.info;
   LOG_DIRECTORY = '';
-  DB_HOST = '127.0.0.1';
+  DB_HOST = 'localhost';
   DB_PORT = 26257;
   DB_NAME = 'db_test';
   DB_USER = 'user_test';
