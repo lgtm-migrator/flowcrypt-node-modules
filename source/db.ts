@@ -33,7 +33,11 @@ export class Db {
       max: 100,
       ssl: config.DB_INSECURE ? undefined : {
         rejectUnauthorized: true,
-        checkServerIdentity: (host, cert) => host !== config.DB_HOST ? new Error(`Unexpected db host: ${host}, expected: ${config.DB_HOST}`) : undefined,
+        // todo - causes "Error: Unexpected db host: localhost, expected: 94.237.87.183"
+        // this seems to look at just the first mentioned host in the cert, which is always localhost
+        // we could rotate our roach certs with setup that has the IP first
+        // before that, this will have to stay disabled
+        // checkServerIdentity: (host, cert) => host !== config.DB_HOST ? new Error(`Unexpected db host: ${host}, expected: ${config.DB_HOST}`) : undefined,
         ca: readFileSync(`${config.DB_CERTS_PATH}/ca.crt`).toString(),
         key: readFileSync(`${config.DB_CERTS_PATH}/client.${config.DB_USER}.key`).toString(),
         cert: readFileSync(`${config.DB_CERTS_PATH}/client.${config.DB_USER}.crt`).toString(),
