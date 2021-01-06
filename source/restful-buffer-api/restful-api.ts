@@ -73,7 +73,7 @@ export class RestfulApi extends Api<RestfulReq, RestfulRes> {
 
   protected fmtHandlerRes = ({ body, status, contentType }: RestfulRes, serverRes: ServerResponse): Buffer => {
     serverRes.statusCode = status;
-    serverRes.setHeader('X-Content-Type-Options', 'no-sniff');
+    serverRes.setHeader("X-Content-Type-Options", "no-sniff");
     if (contentType) {
       serverRes.setHeader('content-type', contentType);
     } else if (body) {
