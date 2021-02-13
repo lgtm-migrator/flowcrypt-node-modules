@@ -116,7 +116,8 @@ export class RestfulApi extends Api<RestfulReq, RestfulRes> {
   }
 
   protected fmtErr = (e: any): Buffer => {
-    return Buffer.from(JSON.stringify({ error: { message: String(e).replace(/^Error: /, '') } }));
+    const errMsg = String(e).replace(/^Error: /, '').replace(/unknown path .*/, 'unknown path');
+    return Buffer.from(JSON.stringify({ error: { message: errMsg } }));
   }
 
 }
