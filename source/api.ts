@@ -58,7 +58,6 @@ export class Api<REQ, RES> {
       }).catch((e) => {
         if (e instanceof HttpAuthErr) {
           response.statusCode = Status.UNAUTHORIZED;
-          response.setHeader('WWW-Authenticate', `Basic realm="${this.apiName}"`);
           e.stack = undefined;
         } else if (e instanceof HttpClientErr) {
           response.statusCode = e.statusCode;
