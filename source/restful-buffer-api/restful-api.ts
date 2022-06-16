@@ -4,7 +4,7 @@ import { RestfulHandler } from './restful-handler'
 
 type Method = 'GET' | 'PUT' | 'POST' | 'DELETE';
 export type RestfulReq = { method: Method; url: string; body: Buffer; query: Dict<string>; }
-export type ContentType = 'application/json' | 'text/plain' | 'text/html' | 'text/css' | 'text/javascript' | 'image/png' | 'image/jpeg' | 'text/svg';
+export type ContentType = 'application/json' | 'text/plain' | 'text/html' | 'text/css' | 'text/javascript' | 'image/png' | 'image/jpeg' | 'text/svg' | 'application/octet-stream';
 export type RestfulRes = { status: Status; body?: Buffer; contentType?: ContentType }
 
 
