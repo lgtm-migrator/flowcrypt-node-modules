@@ -5,7 +5,7 @@ import { RestfulHandler } from './restful-handler'
 type Method = 'GET' | 'PUT' | 'POST' | 'DELETE';
 export type RestfulReq = { method: Method; url: string; body: Buffer; query: Dict<string>; }
 export type ContentType = 'application/json' | 'text/plain' | 'text/html' | 'text/css' | 'text/javascript' | 'image/png' | 'image/jpeg' | 'text/svg' | 'application/octet-stream';
-export type RestfulRes = { status: Status; body?: Buffer; contentType?: ContentType }
+export type RestfulRes = { status: Status; body?: Buffer; contentType?: ContentType, headers?: Dict<string> }
 
 
 export class RestfulApi extends Api<RestfulReq, RestfulRes> {
@@ -71,7 +71,7 @@ export class RestfulApi extends Api<RestfulReq, RestfulRes> {
     return undefined;
   }
 
-  protected fmtHandlerRes = ({ body, status, contentType }: RestfulRes, serverRes: ServerResponse): Buffer => {
+  protected fmtHandlerRes = ({ body, status, contentType, headers }: RestfulRes, serverRes: ServerResponse): Buffer => {
     serverRes.statusCode = status;
     serverRes.setHeader('X-Content-Type-Options', 'no-sniff');
     serverRes.setHeader('X-Frame-Options', 'DENY');
@@ -84,6 +84,11 @@ export class RestfulApi extends Api<RestfulReq, RestfulRes> {
         serverRes.setHeader('content-type', 'application/json');
       } else {
         serverRes.setHeader('content-type', 'text/plain');
+      }
+    }
+    if (headers) {
+      for (const headerName of Object.keys(headers)) {
+        serverRes.setHeader(headerName, headers[headerName]);
       }
     }
     return body || Buffer.from([]);
