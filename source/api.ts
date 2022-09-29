@@ -148,7 +148,7 @@ export class Api<REQ, RES> {
 
   protected fmtHandlerRes = (handlerRes: RES, serverRes: ServerResponse): Buffer => {
     serverRes.setHeader('content-type', 'application/json');
-    return this.fmtRes(handlerRes);
+    return this.fmtRes({ handlerRes });
   }
 
   protected fmtRes = (response: {}): Buffer => {
