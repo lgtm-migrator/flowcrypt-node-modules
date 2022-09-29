@@ -107,16 +107,16 @@ export class Api<REQ, RES> {
     }
     if ((req.url === '/' || req.url === `${this.urlPrefix}/`) && (req.method === 'GET' || req.method === 'HEAD')) {
       res.setHeader('content-type', 'application/json');
-      return this.fmtRes({ app_name: this.apiName } as RES);
+      return this.fmtRes({ app_name: this.apiName } as unknown as RES);
     }
     if ((req.url === '/alive' || req.url === `${this.urlPrefix}/alive`) && (req.method === 'GET' || req.method === 'HEAD')) {
       res.setHeader('content-type', 'application/json');
-      return this.fmtRes({ alive: true } as RES);
+      return this.fmtRes({ alive: true } as unknown as RES);
     }
     if ((req.url === '/health' || req.url === `${this.urlPrefix}/health`) && (req.method === 'GET' || req.method === 'HEAD')) {
       res.setHeader('content-type', 'application/json');
       if (!this.context.db) {
-        return this.fmtRes({ error: { message: 'no db configured' } } as RES);
+        return this.fmtRes({ error: { message: 'no db configured' } } as unknown as RES);
       }
       const start = Date.now();
       try {
@@ -124,10 +124,10 @@ export class Api<REQ, RES> {
           let [{ result }] = await query('SELECT 1+2 AS result;');
           let health = Number(result) === 3 ? 'ok' : 'error';
           return { health, db: { ms: (Date.now() - start) } };
-        }) as RES);
+        }) as unknown as RES);
       } catch (e) {
         res.statusCode = Status.SERVER_ERROR;
-        return this.fmtRes({ health: 'down', error: String(e), db: { ms: (Date.now() - start) } } as RES);
+        return this.fmtRes({ health: 'down', error: String(e), db: { ms: (Date.now() - start) } } as unknown as RES);
       }
     }
     throw new HttpClientErr(`unknown path ${req.url}`);
